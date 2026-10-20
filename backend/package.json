@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "axios": "^1.6.7",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.18.2",
+    "fast-csv": "^5.0.0",
+    "intrinio-sdk": "^6.26.5",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.30.1",
+    "mongoose": "^8.1.0",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "stripe": "^14.17.0",
+    "uuid": "^9.0.1",
+    "yarn": "^1.22.21"
+  },
+  "scripts": {
+    "start": "nodemon server.js"
+  }
+}
