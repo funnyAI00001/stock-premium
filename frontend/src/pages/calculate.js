@@ -21,7 +21,6 @@ import Checkbox from "@mui/material/Checkbox";
 import FormGroup from "@mui/material/FormGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 
-// import CoveredCallPremiumsTable from "../components/stock/coveredCallPremiumsTable";
 import CoveredCallReturnsTable from "../components/stock/coveredCallReturnsTable";
 import LoadingOverlay from "../components/dialog/loadingOverlay";
 import CustomAlert from "../components/customAlert";
@@ -104,6 +103,7 @@ const Calculate = ({
   const [openMaxSymbolCounts, setOpenMaxSymbolCounts] = useState(false);
   const [openWarningForNoSupportSymbol, setOpenWarningForNoSupportSymbol] =
     useState(false);
+  const [openNoSymbolError, setOpenNoSymbolError] = useState(false);
 
   const service_error = useSelector((state) => state.stock.service_error);
   const server_error = useSelector((state) => state.stock.server_error);
@@ -158,6 +158,8 @@ const Calculate = ({
     if (expirations.length > 0) {
       const now = moment();
       let dates = [];
+      let minDifference = 1000;
+      let minDate = null;
 
       for (let item of expirations) {
         const date = moment(item.date, "M/D/YYYY");
@@ -166,9 +168,14 @@ const Calculate = ({
         if (difference > 8) {
           dates.push(item);
         }
+
+        if (difference < minDifference && difference > 0) {
+          minDifference = difference;
+          minDate = item;
+        }
       }
 
-      setExpirationDate(dates[0].date);
+      setExpirationDate(minDate.date);
       setAvailableExpirations(dates);
     }
   }, [expirations]);
@@ -327,6 +334,13 @@ const Calculate = ({
     );
 
     const filteredSymbols = symbols.filter((item) => item !== "");
+
+    if (filteredSymbols.length === 0) {
+      setOpenNoSymbolError(true);
+
+      return;
+    }
+
     setSymbols(filteredSymbols);
 
     if (expirations.length === 0) {
@@ -449,7 +463,7 @@ const Calculate = ({
           handleEndGettingWeeklyOption
         )
       );
-    } 
+    }
   };
 
   const handleEndGettingWeeklyOption = () => {
@@ -649,7 +663,8 @@ const Calculate = ({
             sx={{
               margin: "auto",
               marginY: 2,
-              backgroundColor: `${theme.palette.text.third} !important`,
+              background: `${theme.palette.text.third}`,
+              border: `${theme.palette.text.third} solid 1px`,
               color: "white",
             }}
             onClick={handleCalculate}
@@ -696,18 +711,6 @@ const Calculate = ({
               </ul>
             </Box>
           </fieldset>
-          {/* <Typography variant="h4" color="text.third" textAlign="center" mt={3}>
-            Covered Call Premiums
-          </Typography>
-
-          <CoveredCallPremiumsTable
-            symbols={symbols}
-            ATMs={ATMs}
-            sharePrices={sharePrices}
-            OTM5s={OTM5s}
-            OTM10s={OTM10s}
-            expiration_date={expiration_date}
-          /> */}
         </section>
       )}
 
@@ -882,6 +885,16 @@ const Calculate = ({
         text="Symbols that do not support the selected weekly expiry date are not displayed."
         autoHideDuration={10000}
         onClose={() => setOpenWarningForNoSupportSymbol(false)}
+      />
+
+      <CustomAlert
+        openState={openNoSymbolError}
+        severity="warning"
+        text="Please add at least one symbol!"
+        autoHideDuration={6000}
+        onClose={() => {
+          setOpenNoSymbolError(false);
+        }}
       />
     </div>
   );

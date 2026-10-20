@@ -6,9 +6,9 @@ import BasicFilters from "../components/screener/basicFilters";
 import OptionsFilters from "../components/screener/optionsFilters";
 import BasicFilterResult from "../components/screener/basicFilterResult";
 import OptionsResult from "../components/screener/optionsResult";
-import TempAlert from "../components/screener/tempAlert";
-import OptionsSearchBar from "../components/screener/optionsSearchBar";
-import SearchBarFilterResult from "../components/screener/searchBarFilterResult";
+// import TempAlert from "../components/screener/tempAlert";
+// import OptionsSearchBar from "../components/screener/optionsSearchBar";
+// import SearchBarFilterResult from "../components/screener/searchBarFilterResult";
 
 const OptionsScreener = () => {
   const isSmScreen = useMediaQuery("(min-width:600px)");
@@ -22,9 +22,9 @@ const OptionsScreener = () => {
           : { padding: 2, marginTop: 10 }
       }
     >
-      <TempAlert />
+      {/* <TempAlert /> */}
       <Typography variant="h3" color="white">
-        Find Juicy Options
+        Find Stocks with Juicy Options Premiums
       </Typography>
       <BasicFilters />
       <BasicFilterResult />
@@ -42,8 +42,8 @@ const OptionsScreener = () => {
           Save to Shortlist
         </Button>
       </Box>
-      <OptionsSearchBar />
-      <SearchBarFilterResult />
+      {/* <OptionsSearchBar /> */}
+      {/* <SearchBarFilterResult /> */}
     </div>
   );
 };

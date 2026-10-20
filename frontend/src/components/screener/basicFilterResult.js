@@ -45,6 +45,7 @@ const BasicFilterResult = () => {
   const basicFilterResult = useSelector(
     (state) => state.stock.basicFilterResult
   );
+  const bFoundStock = useSelector((state) => state.stock.bFoundStock);
 
   const handleCheckChange = (event, item) => {
     if (event.target.checked) {
@@ -57,266 +58,270 @@ const BasicFilterResult = () => {
   };
 
   useEffect(() => {
-    dispatch(set_Symbols_For_Optionsfilter(symbolsForOptionsFilter))
+    dispatch(set_Symbols_For_Optionsfilter(symbolsForOptionsFilter));
   }, [symbolsForOptionsFilter]);
 
   return (
-    <fieldset style={fieldsetStyle}>
-      <legend>Stocks</legend>
+    bFoundStock && (
+      <fieldset style={fieldsetStyle}>
+        <legend>Stocks</legend>
 
-      <Box sx={{ maxWidth: isSmScreen ? "50vw" : "85vw" }}>
-        <TableContainer sx={{ "& .MuiTableCell-body": { fontSize: 16 } }}>
-          {basicFilterResult.length > 0 && (
-            <Table aria-label="covered call premiums table">
-              <TableBody
-                sx={{
-                  "&:last-child td, &:last-child th": {
-                    borderBottom: "none",
-                    color: "white",
-                  },
-                }}
-              >
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+        <Box sx={{ maxWidth: isSmScreen ? "50vw" : "85vw" }}>
+          <TableContainer sx={{ "& .MuiTableCell-body": { fontSize: 16 } }}>
+            {basicFilterResult.length > 0 && (
+              <Table aria-label="covered call premiums table">
+                <TableBody
+                  sx={{
+                    "&:last-child td, &:last-child th": {
+                      borderBottom: "none",
+                      color: "white",
+                    },
+                  }}
                 >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[0]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell key={index} align="center">
-                      <Checkbox
-                        inputProps={{ "aria-label": "controlled" }}
-                        checked={symbolsForOptionsFilter.includes(item.symbol)}
-                        onClick={(event) => handleCheckChange(event, item)}
-                      />
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[0]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell key={index} align="center">
+                        <Checkbox
+                          inputProps={{ "aria-label": "controlled" }}
+                          checked={symbolsForOptionsFilter.includes(
+                            item.symbol
+                          )}
+                          onClick={(event) => handleCheckChange(event, item)}
+                        />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[1]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item.symbol}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[1]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item.symbol}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[2]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item.name}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[2]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item.name}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[3]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      ${item.sharePrice}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[3]}
                     </TableCell>
-                  ))}
-                </TableRow>
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        ${item.sharePrice}
+                      </TableCell>
+                    ))}
+                  </TableRow>
 
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[4]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      ${formatNumber(item.marketCap)}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[4]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        ${formatNumber(item.marketCap)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[5]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item.beta}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[5]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item.beta}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[6]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item.PE}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[6]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item.PE}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[7]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {(item.DividendYield * 100).toFixed(2)}%
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[7]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {(item.DividendYield * 100).toFixed(2)}%
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[8]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item.PB}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[8]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item.PB}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[9]}
-                  </TableCell>
-                  {basicFilterResult.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item.industry}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[9]}
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          )}
-        </TableContainer>
-      </Box>
-    </fieldset>
+                    {basicFilterResult.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item.industry}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            )}
+          </TableContainer>
+        </Box>
+      </fieldset>
+    )
   );
 };
 

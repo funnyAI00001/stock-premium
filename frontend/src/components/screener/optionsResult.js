@@ -37,247 +37,250 @@ const OptionsResult = () => {
   const optionFilterResult = useSelector(
     (state) => state.stock.optionFilterResult
   );
+  const bFoundOption = useSelector((state) => state.stock.bFoundOption);
 
   return (
-    <fieldset style={fieldsetStyle}>
-      <legend>Options</legend>
-      <Box sx={{ width: isSmScreen ? "50vw" : "80vw" }}>
-        <TableContainer>
-          {optionFilterResult.symbols.length > 0 && (
-            <Table
-              aria-label="covered call premiums table"
-              sx={{ "& .MuiTableCell-body": { fontSize: 16 } }}
-            >
-              <TableBody
-                sx={{
-                  "&:last-child td, &:last-child th": {
-                    borderBottom: "none",
-                    color: "white",
-                  },
-                }}
+    bFoundOption && (
+      <fieldset style={fieldsetStyle}>
+        <legend>Options</legend>
+        <Box sx={{ width: isSmScreen ? "50vw" : "80vw" }}>
+          <TableContainer>
+            {optionFilterResult.symbols.length > 0 && (
+              <Table
+                aria-label="covered call premiums table"
+                sx={{ "& .MuiTableCell-body": { fontSize: 16 } }}
               >
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                <TableBody
+                  sx={{
+                    "&:last-child td, &:last-child th": {
+                      borderBottom: "none",
+                      color: "white",
+                    },
+                  }}
                 >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      fontWeight: 800,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[0]}
-                  </TableCell>
-                  {optionFilterResult.symbols.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        fontWeight: 800,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[0]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      fontWeight: 600,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {optionFilterResult.symbols.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[1]}
-                  </TableCell>
-                  {optionFilterResult.sharePrices.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      ${Intl.NumberFormat("en-US").format(item * 100)}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        fontWeight: 600,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[1]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      fontWeight: 600,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {optionFilterResult.sharePrices.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        ${Intl.NumberFormat("en-US").format(item * 100)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[2]}
-                  </TableCell>
-                  {optionFilterResult.expiry_dates.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        fontWeight: 600,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[2]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      fontWeight: 600,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {optionFilterResult.expiry_dates.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[3]}
-                  </TableCell>
-                  {optionFilterResult.strikePrices.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      ${item}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        fontWeight: 600,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[3]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      fontWeight: 600,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {optionFilterResult.strikePrices.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        ${item}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[4]}
-                  </TableCell>
-                  {optionFilterResult.premiums.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      ${item}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        fontWeight: 600,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[4]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      fontWeight: 600,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {optionFilterResult.premiums.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        ${item}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[5]}
-                  </TableCell>
-                  {optionFilterResult.ROIs.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item}%
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        fontWeight: 600,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[5]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      fontWeight: 600,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {optionFilterResult.ROIs.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item}%
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[6]}
-                  </TableCell>
-                  {optionFilterResult.annualROIs.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item}%
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        fontWeight: 600,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[6]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      fontWeight: 600,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {optionFilterResult.annualROIs.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item}%
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[7]}
-                  </TableCell>
-                  {optionFilterResult.OIs.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item}
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        fontWeight: 600,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[7]}
                     </TableCell>
-                  ))}
-                </TableRow>
-                <TableRow
-                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                >
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    align="left"
-                    sx={{
-                      color: `${theme.palette.text.third} !important`,
-                      fontWeight: 600,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 1,
-                      backgroundColor: theme.palette.background.default,
-                    }}
+                    {optionFilterResult.OIs.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  <TableRow
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
-                    {rowNames[8]}
-                  </TableCell>
-                  {optionFilterResult.IVs.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {item * 100}%
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      align="left"
+                      sx={{
+                        color: `${theme.palette.text.third} !important`,
+                        fontWeight: 600,
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 1,
+                        backgroundColor: theme.palette.background.default,
+                      }}
+                    >
+                      {rowNames[8]}
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          )}
-        </TableContainer>
-      </Box>
-    </fieldset>
+                    {optionFilterResult.IVs.map((item, index) => (
+                      <TableCell align="center" key={index}>
+                        {item * 100}%
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            )}
+          </TableContainer>
+        </Box>
+      </fieldset>
+    )
   );
 };
 

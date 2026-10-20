@@ -34,8 +34,8 @@ const main = async () => {
   const requestsPerMinute = 75; // Number of API requests allowed per minute
   const requestDelay = Math.ceil((60 * 1000) / requestsPerMinute); // Delay between each request in milliseconds
 
-  for (let index = 0; index < symbolLists.length; index++) {
-    // for (let index = 0; index < 0; index++) {
+  // for (let index = 0; index < symbolLists.length; index++) {
+    for (let index = 0; index < 0; index++) {
     const element = symbolLists[index];
     const symbol = element.symbol;
 

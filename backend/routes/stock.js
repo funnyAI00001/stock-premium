@@ -3,7 +3,7 @@ const router = express.Router();
 const axios = require("axios");
 const multer = require("multer");
 const csv = require("fast-csv");
-const moment = require("moment");
+// const moment = require("moment");
 const fs = require("fs");
 
 const Expiration = require("../models/expiration");
@@ -444,9 +444,10 @@ router.post(
 );
 
 router.post("/getBasicResult", async (req, res) => {
-  let industries = [];
+  // let industries = [];
   const {
-    sectors,
+    // sectors,
+    industries,
     betas,
     minMarketCap,
     maxMarketCap,
@@ -461,12 +462,12 @@ router.post("/getBasicResult", async (req, res) => {
     maxPB,
   } = req.body;
 
-  const jsonData = fs.readFileSync("sectorsData.json", "utf8");
-  const allSectors = JSON.parse(jsonData);
+  // const jsonData = fs.readFileSync("sectorsData.json", "utf8");
+  // const allSectors = JSON.parse(jsonData);
 
-  sectors.forEach((sector) => {
-    industries = [...industries, ...allSectors[sector]];
-  });
+  // sectors.forEach((sector) => {
+  //   industries = [...industries, ...allSectors[sector]];
+  // });
 
   const beta = {
     Low: { $lt: 0.9 },
@@ -475,32 +476,6 @@ router.post("/getBasicResult", async (req, res) => {
   };
 
   const betaQuery = betas.map((category) => ({ beta: beta[category] }));
-  // let divYieldQuery;
-
-  // switch (divYield) {
-  //   case 0:
-  //     divYieldQuery = { $eq: 0 };
-  //     break;
-
-  //   case 1:
-  //     divYieldQuery = { $gt: 0, $lte: 0.02 };
-  //     break;
-
-  //   case 2:
-  //     divYieldQuery = { $gt: 0.02, $lte: 0.05 };
-  //     break;
-
-  //   case 3:
-  //     divYieldQuery = { $gt: 0.05, $lte: 0.07 };
-  //     break;
-
-  //   case 4:
-  //     divYieldQuery = { $gt: 0.07 };
-  //     break;
-
-  //   default:
-  //     break;
-  // }
 
   const minMarketCapQuery = convertStringToNumber(minMarketCap);
   const maxMarketCapQuery = convertStringToNumber(maxMarketCap);
@@ -551,6 +526,7 @@ router.post("/getOptions", async (req, res) => {
     minOI,
     maxSpread,
     symbolsForOptionsFilter,
+    // selectedIndustries
   } = req.body;
 
   const premiums = [];
@@ -581,17 +557,23 @@ router.post("/getOptions", async (req, res) => {
         }
       );
     } catch (error) {
-      console.log("Error occurred while fetching data:", error.message);
+      console.log(
+        "Error occurred while fetching data for symbol: " + symbol,
+        error.message
+      );
 
       if (error.response.status == 404) {
         continue;
       }
+
       res.status(500).json({ message: "Data not found for symbol" });
       return;
     }
 
     if (response.data.bid == 0.0) {
-      res.status(500).json({ message: "service not available" });
+      console.log("Service not available for " + symbol);
+      // res.status(500).json({ message: "Service not available" });
+      continue;
     }
 
     let daysToExpirationDate = 1;
@@ -610,6 +592,7 @@ router.post("/getOptions", async (req, res) => {
       );
 
       if (respon.data.s === "no_data") {
+        console.log("No options available for " + symbol);
         continue;
       }
 
@@ -646,7 +629,6 @@ router.post("/getOptions", async (req, res) => {
         const diff1 = Math.abs(
           sharePrice * (1 + OTMpercent / 100) - strike[OTMindex]
         );
-        // const diff4 = Math.abs(sharePrice * 1.05 - strike[index]);
         const diff2 = Math.abs(
           sharePrice * (1 + OTMpercent / 100) - strike[index]
         );
@@ -694,7 +676,6 @@ router.post("/getOptions", async (req, res) => {
 
         case "Wide":
           if (!(BA > 2.5 && BA <= 5)) {
-            console.log("test");
             continue;
           }
 
@@ -722,7 +703,12 @@ router.post("/getOptions", async (req, res) => {
       BAs.push(BA.toFixed(2));
       filteredSymbols.push(symbol);
     } catch (err) {
-      console.log("Error in fetching options chain: " + err.message);
+      console.log(
+        "Error in fetching options chain for symbol: " +
+          symbol +
+          " " +
+          err.message
+      );
       if (err.response.status != 404) {
         console.log(err.response.status);
         res.status(500).json({ message: "Error in  fetching options chain" });
@@ -730,19 +716,6 @@ router.post("/getOptions", async (req, res) => {
       }
     }
   }
-
-  // console.log({
-  //   symbols: filteredSymbols,
-  //   sharePrices,
-  //   expiry_dates,
-  //   strikePrices,
-  //   premiums,
-  //   ROIs,
-  //   annualROIs,
-  //   OIs,
-  //   IVs,
-  //   BAs,
-  // });
 
   res.status(200).json({
     optionFilterResult: {
@@ -803,6 +776,152 @@ router.post("/getSearchResult", async (req, res) => {
   });
 
   res.status(200).json({ searchFilterResult });
+});
+
+router.post("/getCashSecuredPuts", async (req, res) => {
+  const { symbols, expiration_date, otmPercentage, itmPercentage } = req.body;
+  const token = process.env.TOKEN || "";
+
+  let expiry_date = expiration_date;
+
+  // Data to be returned
+  const sharePrices = [];
+  const ATMs = [];
+  const OTMs = [];
+  const ITMs = [];
+  const strikeATMs = [];
+  const strikeOTMs = [];
+  const strikeITMs = [];
+  const available_symbols = [];
+
+  for (let index = 0; index < symbols.length; index++) {
+    const symbol = symbols[index];
+
+    let response = null;
+
+    try {
+      response = await axios.get(
+        "https://api.marketdata.app/v1/stocks/quotes/" + symbol,
+        {
+          params: {
+            Accept: "application/json",
+            token: token,
+          },
+        }
+      );
+    } catch (error) {
+      console.log("Error occurred while fetching data:", error.message);
+      res.status(500).json({ message: "Data not found for symbol" });
+      return;
+    }
+
+    if (response.data.bid == 0.0) {
+      res.status(500).json({ message: "service not available" });
+    }
+
+    let daysToExpirationDate = 1;
+    const startDate = new Date(expiry_date);
+    const current = new Date();
+
+    // Calculate the time difference in milliseconds
+    const timeDifference = Math.abs(current.getTime() - startDate.getTime());
+
+    // Convert the time difference from milliseconds to days
+    daysToExpirationDate = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+    try {
+      const respon = await axios.get(
+        `https://api.marketdata.app/v1/options/chain/${symbol}/?expiration=${expiry_date}&side=put&token=${token}`
+      );
+
+      if (respon.data.s === "no_data") {
+        continue;
+      }
+
+      const sharePrice = response.data.bid;
+      const strike = respon.data.strike;
+      const mid = respon.data.mid;
+
+      let ATMindex = 0,
+        OTMindex = 0,
+        ITMindex = 0;
+
+      for (let index = 1; index < strike.length; index++) {
+        // Finding ATM
+        const diff1 = Math.abs(sharePrice - strike[ATMindex]);
+        const diff2 = Math.abs(sharePrice - strike[index]);
+
+        if (diff2 < diff1 && strike[index] > sharePrice) {
+          ATMindex = index;
+        }
+
+        // Finding OTM
+        const diff3 = Math.abs(
+          sharePrice * (1 - otmPercentage / 100) - strike[OTMindex]
+        );
+        const diff4 = Math.abs(
+          sharePrice * (1 - otmPercentage / 100) - strike[index]
+        );
+
+        if (diff4 < diff3) {
+          OTMindex = index;
+        }
+
+        // Finding ITM
+        const diff5 = Math.abs(
+          sharePrice * (1 + itmPercentage / 100) - strike[ITMindex]
+        );
+        const diff6 = Math.abs(
+          sharePrice * (1 + itmPercentage / 100) - strike[index]
+        );
+
+        if (diff6 < diff5) {
+          ITMindex = index;
+        }
+      }
+
+      const ATM = mid[ATMindex] * 100;
+      const OTM = mid[OTMindex] * 100;
+      const ITM = mid[ITMindex] * 100;
+      const strikeATM = strike[ATMindex];
+      const strikeOTM = strike[OTMindex];
+      const strikeITM = strike[ITMindex];
+
+      ATMs.push(ATM.toFixed(0));
+      OTMs.push(OTM.toFixed(0));
+      ITMs.push(ITM.toFixed(0));
+      strikeATMs.push(strikeATM);
+      strikeOTMs.push(strikeOTM);
+      strikeITMs.push(strikeITM);
+      sharePrices.push(response.data.bid);
+      available_symbols.push(symbol);
+    } catch (err) {
+      console.log(
+        "Error in fetching options chain for symbol: " +
+          symbol +
+          " " +
+          err.message
+      );
+
+      if (err.response.status != 404) {
+        console.log(err.response.status);
+        res.status(500).json({ message: "Error in  fetching options chain" });
+        return;
+      }
+    }
+  }
+
+  res.json({
+    sharePrices,
+    ATMs,
+    OTMs,
+    ITMs,
+    strikeATMs,
+    strikeOTMs,
+    strikeITMs,
+    expiration_date: expiry_date,
+    available_symbols,
+  });
 });
 
 module.exports = router;

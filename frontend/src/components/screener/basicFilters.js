@@ -11,11 +11,13 @@ import {
   ListItemText,
   Box,
   Button,
+  Stack,
+  Autocomplete,
 } from "@mui/material";
 import Checkbox from "@mui/material/Checkbox";
 
 import { useTheme } from "@emotion/react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import CustomAlert from "../customAlert";
 import LoadingOverlay from "../dialog/loadingOverlay";
@@ -37,36 +39,41 @@ const BasicFilters = () => {
   const [maxSharePrice, setMaxSharePrice] = useState(1000);
   const [minMarketCap, setMinMarketCap] = useState("0B");
   const [maxMarketCap, setMaxMarketCap] = useState("10T");
-  const [selectedSectors, setSelectedSectors] = useState([]);
   const [minPE, setMinPE] = useState(-100000);
   const [maxPE, setMaxPE] = useState(10000000);
   const [minDivYield, setMinDivYield] = useState(0);
   const [maxDivYield, setMaxDivYield] = useState(100);
   const [minPB, setMinPB] = useState(-100000);
   const [maxPB, setMaxPB] = useState(10000000);
-  const sectors = [
-    "Energy & Utilities",
-    "Financial Services",
-    "Healthcare & Pharmaceuticals",
-    "Technology & Electronics",
-    "Industrial & Manufacturing",
-    "Consumer Goods & Services",
-    "Food & Beverage",
-    "Transportation & Logistics",
-    "Real Estate & Construction",
-    "Media, Entertainment & Recreation",
-    "Telecommunications",
-    "Materials & Chemicals",
-    "Retail & Wholesale",
-    "Automotive & Aerospace",
-    "Insurance",
-  ];
+  const [selectedSymbols, setSelectedSymbols] = useState([]);
+  // const [selectedSectors, setSelectedSectors] = useState([]);
+
+  // const sectors = [
+  //   "Energy & Utilities",
+  //   "Financial Services",
+  //   "Healthcare & Pharmaceuticals",
+  //   "Technology & Electronics",
+  //   "Industrial & Manufacturing",
+  //   "Consumer Goods & Services",
+  //   "Food & Beverage",
+  //   "Transportation & Logistics",
+  //   "Real Estate & Construction",
+  //   "Media, Entertainment & Recreation",
+  //   "Telecommunications",
+  //   "Materials & Chemicals",
+  //   "Retail & Wholesale",
+  //   "Automotive & Aerospace",
+  //   "Insurance",
+  // ];
   const betas = ["Low", "Mid", "High"];
   const [openWarningForNoSector, setOpenWarningForNoSector] = useState(false);
+  const [openWarningForNoSymbol, setOpenWarningForNoSymbol] = useState(false);
   const [openWarningForNoBeta, setOpenWarningForNoBeta] = useState(false);
   const [openWarningForPE, setOpenWarningForPE] = useState(false);
   const [openWarningForPB, setOpenWarningForPB] = useState(false);
   const [isGettingBasicResult, setIsGettingBasicResult] = useState(false);
+  const stocks = useSelector((state) => state.stock.stocks);
+  const [selectedIndustries, setSelectedIndustries] = useState([]);
 
   const handleBetaChange = (event, beta) => {
     if (event.target.checked) {
@@ -77,8 +84,13 @@ const BasicFilters = () => {
   };
 
   const onGetBasicResult = async () => {
-    if (selectedSectors.length === 0) {
-      setOpenWarningForNoSector(true);
+    // if (selectedSectors.length === 0) {
+    //   setOpenWarningForNoSector(true);
+
+    //   return;
+    // }
+    if (selectedIndustries.length === 0) {
+      setOpenWarningForNoSymbol(true);
 
       return;
     }
@@ -106,7 +118,8 @@ const BasicFilters = () => {
     dispatch(
       getBasicResult(
         {
-          sectors: selectedSectors,
+          // sectors: selectedSectors,
+          industries: selectedIndustries,
           betas: selectedBetas,
           minMarketCap: minMarketCap,
           maxMarketCap: maxMarketCap,
@@ -122,6 +135,7 @@ const BasicFilters = () => {
         onEndGetBasicResult
       )
     );
+
   };
 
   const onEndGetBasicResult = () => {
@@ -131,8 +145,8 @@ const BasicFilters = () => {
   return (
     <Box>
       <fieldset style={fieldsetStyle}>
-        <legend>Basic Filters</legend>
-        <Grid container spacing={0} alignItems="center">
+        <legend>Lookalike Stock Finder</legend>
+        {/* <Grid container spacing={0} alignItems="center">
           <Grid item xs={2} sm={4}>
             <Typography
               color="white"
@@ -177,6 +191,47 @@ const BasicFilters = () => {
                 ))}
               </Select>
             </FormControl>
+          </Grid>
+        </Grid> */}
+        <Grid container spacing={1} alignItems="center">
+          <Grid item xs={2} sm={4}>
+            <Typography
+              color="white"
+              variant="body1"
+              sx={{ fontSize: isSmScreen ? 18 : 14 }}
+            >
+              Ticker Symbol
+            </Typography>
+          </Grid>
+          <Grid item xs={10} sm={8} justifyContent="center">
+            <Stack spacing={3}>
+              <Autocomplete
+                multiple
+                id="selected symbols"
+                options={stocks}
+                getOptionLabel={(stock) => `${stock.symbol} - ${stock.name}`}
+                filterSelectedOptions
+                value={selectedSymbols}
+                onChange={(event, newValue) => {
+                  setSelectedSymbols(newValue);
+                  const industries = newValue.map((item) => item.industry);
+                  const uniqueIndustries = industries.filter(
+                    (item, index) => industries.indexOf(item) === index
+                  );
+                  setSelectedIndustries(uniqueIndustries);
+                }}
+                isOptionEqualToValue={(option, value) => {
+                  return option === value;
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Enter Stocks You Know To Find Lookalikes"
+                    placeholder="Symbols"
+                  />
+                )}
+              />
+            </Stack>
           </Grid>
         </Grid>
         <Grid container spacing={1} marginTop={2} alignItems="center">
@@ -531,7 +586,7 @@ const BasicFilters = () => {
           }}
           onClick={() => onGetBasicResult()}
         >
-          Find
+          Find Stocks
         </Button>
       </Box>
 
@@ -542,6 +597,15 @@ const BasicFilters = () => {
         autoHideDuration={6000}
         onClose={() => {
           setOpenWarningForNoSector(false);
+        }}
+      />
+      <CustomAlert
+        openState={openWarningForNoSymbol}
+        severity="warning"
+        text="Please select at least one symbol!"
+        autoHideDuration={6000}
+        onClose={() => {
+          setOpenWarningForNoSymbol(false);
         }}
       />
       <CustomAlert

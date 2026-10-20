@@ -11,6 +11,8 @@ import {
   FormGroup,
   FormControlLabel,
   Box,
+  Autocomplete,
+  TextField,
 } from "@mui/material";
 import Stack from "@mui/material/Stack";
 import Checkbox from "@mui/material/Checkbox";
@@ -59,13 +61,22 @@ const OptionsFilters = () => {
   const expirations = useSelector((state) => state.stock.expirations);
   const [openNoSymbolSelected, setOpenNoSymbolSelected] = useState(false);
   const [isFindingOptions, setIsFindingOptions] = useState(false);
+  const [selectedStocks, setSelectedStocks] = useState([]);
+  const [selectedIndustries, setSelectedIndustries] = useState([]);
 
   const weekly_expiry_dates = useSelector(
     (state) => state.stock.weekly_expiry_dates
   );
   const symbolsForOptionsFilter = useSelector(
     (state) => state.stock.symbolsForOptionsFilter
+  ); // Filtered symbols by stock filter
+  const stocks = useSelector((state) => state.stock.stocks);
+  const stocksForOptionFilter = stocks.filter((item) =>
+    symbolsForOptionsFilter.includes(item.symbol)
   );
+
+  const [previousSymbolsForOptionsFilter, setPreviousSymbolsForOptionsFilter] =
+    useState([symbolsForOptionsFilter]);
 
   const formControlStyle = {
     m: 1,
@@ -99,6 +110,33 @@ const OptionsFilters = () => {
     setIsGettingWeeklyExpiryDates(false);
   };
 
+  const onFindOptions = () => {
+    if (selectedStocks.map((item) => item.symbol).length === 0) {
+      setOpenNoSymbolSelected(true);
+      return;
+    }
+
+    const data = {
+      selectedStrikePriceType,
+      expiryDate: formatDate(expiryDate),
+      minPremium,
+      minTradeROI,
+      minAnnualROI,
+      minOI,
+      maxSpread,
+      // symbolsForOptionsFilter,
+      symbolsForOptionsFilter: selectedStocks.map((item) => item.symbol),
+      // selectedIndustries
+    };
+
+    setIsFindingOptions(true);
+    dispatch(getOptions(data, afterFindOptions));
+  };
+
+  const afterFindOptions = () => {
+    setIsFindingOptions(false);
+  };
+
   useEffect(() => {
     let total = [...availableExpirations].map((item) => item.date);
 
@@ -123,6 +161,8 @@ const OptionsFilters = () => {
     if (expirations.length > 0) {
       const now = moment();
       let dates = [];
+      let minDifference = 1000;
+      let minDate = null
 
       for (let item of expirations) {
         const date = moment(item.date, "M/D/YYYY");
@@ -131,42 +171,114 @@ const OptionsFilters = () => {
         if (difference > 8) {
           dates.push(item);
         }
+
+        if (difference < minDifference && difference > 0) {
+          minDifference = difference
+          minDate = item
+        }
       }
 
-      setExpiryDate(dates[0].date);
+      // setExpiryDate(dates[0].date);
+      setExpiryDate(minDate.date);
       setAvailableExpirations(dates);
     }
   }, [expirations]);
 
-  const onFindOptions = () => {
+  // Whenever checked symbols are changed in stock filter
+  useEffect(() => {
     if (symbolsForOptionsFilter.length === 0) {
-      setOpenNoSymbolSelected(true);
       return;
     }
-    
-    const data = {
-      selectedStrikePriceType,
-      expiryDate: formatDate(expiryDate),
-      minPremium,
-      minTradeROI,
-      minAnnualROI,
-      minOI,
-      maxSpread,
-      symbolsForOptionsFilter,
-    };
 
-    setIsFindingOptions(true);
-    dispatch(getOptions(data, afterFindOptions));
-  };
+    const customStocks = stocks.filter((item) =>
+      symbolsForOptionsFilter.includes(item.symbol)
+    );
+    const combinedArray = [...customStocks, ...selectedStocks];
 
-  const afterFindOptions = () => {
-    setIsFindingOptions(false);
-  };
+    const uniqueStocks = combinedArray.filter(
+      (stock, index, self) =>
+        index === self.findIndex((s) => s.symbol === stock.symbol)
+    );
+
+    const removedSymbol = previousSymbolsForOptionsFilter.filter(
+      (item) => !symbolsForOptionsFilter.includes(item)
+    );
+
+    if (removedSymbol.length !== 0) {
+      const updatedUniqueStocks = uniqueStocks.filter(
+        (stock) => stock.symbol !== removedSymbol[0]
+      );
+      setSelectedStocks(updatedUniqueStocks);
+    } else {
+      setSelectedStocks(uniqueStocks);
+    }
+
+    setPreviousSymbolsForOptionsFilter(symbolsForOptionsFilter);
+  }, [symbolsForOptionsFilter, stocks]);
 
   return (
     <Box>
       <fieldset style={fieldsetStyle}>
         <legend>Options Filters</legend>
+        <Grid container spacing={0}>
+          <Grid item xs={4} display="flex" alignItems="center" marginTop={3}>
+            <Typography
+              color="white"
+              variant="body1"
+              sx={{ fontSize: isSmScreen ? 18 : 14 }}
+            >
+              Ticker Symbol
+            </Typography>
+          </Grid>
+
+          <Grid
+            item
+            xs={8}
+            marginTop={3}
+            justifyContent="flex-start"
+            gap={isSmScreen ? 2 : 1}
+            sx={{
+              "& .MuiButton-root": {
+                color: "white",
+                border: `solid 1px ${theme.palette.text.third}`,
+                minWidth: isSmScreen ? 100 : 10,
+              },
+              "& .selected": {
+                backgroundColor: `${theme.palette.text.third} !important`,
+              },
+            }}
+          >
+            <Stack spacing={3}>
+              <Autocomplete
+                multiple
+                id="selected symbols"
+                options={stocks}
+                getOptionLabel={(stock) => `${stock.symbol} - ${stock.name}`}
+                filterSelectedOptions
+                value={selectedStocks}
+                onChange={(event, newValue) => {
+                  setSelectedStocks(newValue);
+                  console.log(newValue);
+                  const industries = newValue.map((item) => item.industry);
+                  const uniqueIndustries = industries.filter(
+                    (item, index) => industries.indexOf(item) === index
+                  );
+                  setSelectedIndustries(uniqueIndustries);
+                }}
+                isOptionEqualToValue={(option, value) => {
+                  return option.symbol === value.symbol;
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Select from Stock Finder above or enter directly"
+                    placeholder="Symbols"
+                  />
+                )}
+              />
+            </Stack>
+          </Grid>
+        </Grid>
         <Grid container spacing={0}>
           <Grid item xs={4} display="flex" alignItems="center" marginTop={3}>
             <Typography
@@ -522,7 +634,7 @@ const OptionsFilters = () => {
           }}
           onClick={() => onFindOptions()}
         >
-          Find
+          Find Options
         </Button>
       </Box>
     </Box>

@@ -16,6 +16,10 @@ import {
   GET_OPTIONS_FILTER_RESULT,
   GET_STOCKS,
   GET_SEARCH_FILTER_RESULTS,
+  GET_CASH_SECURED_PUTS,
+  SET_OTM_ITM_PERCENTAGES,
+  SET_FOUND_STOCK,
+  SET_FOUND_OPTION,
 } from "../actions/types";
 
 const initialState = {
@@ -50,6 +54,14 @@ const initialState = {
   optionFilterResult: { symbols: [] },
   stocks: [],
   searchFilterResult: [],
+  OTMs: [],
+  ITMs: [],
+  strikeOTMs: [],
+  strikeITMs: [],
+  OTMpercentage: 5,
+  ITMpercentage: 5,
+  bFoundStock: false,
+  bFoundOptions: false,
 };
 
 const stockReducer = (state = initialState, action) => {
@@ -200,8 +212,56 @@ const stockReducer = (state = initialState, action) => {
 
       return {
         ...state,
-        searchFilterResult: searchFilterResult
-      }
+        searchFilterResult: searchFilterResult,
+      };
+
+    case GET_CASH_SECURED_PUTS:
+      const {
+        sharePrices2,
+        ATMs2,
+        OTMs,
+        ITMs,
+        strikeATMs2,
+        strikeOTMs,
+        strikeITMs,
+        expiration_date2,
+        available_symbols2,
+      } = action.payload;
+
+      return {
+        ...state,
+        sharePrices: sharePrices2,
+        ATMs: ATMs2,
+        OTMs: OTMs,
+        ITMs: ITMs,
+        strikeATMs: strikeATMs2,
+        strikeOTMs: strikeOTMs,
+        strikeITMs: strikeITMs,
+        expiration_date: expiration_date2,
+        available_symbols: available_symbols2,
+      };
+
+    case SET_OTM_ITM_PERCENTAGES:
+      const { percentages2 } = action.payload;
+
+      return {
+        ...state,
+        OTMpercentage: percentages2[0],
+        ITMpercentage: percentages2[1],
+      };
+
+    case SET_FOUND_STOCK:
+      return {
+        ...state,
+        bFoundStock: true,
+      };
+
+    case SET_FOUND_OPTION:
+      return {
+        ...state,
+        bFoundOption: true,
+      };
+
     default:
       return state;
   }
