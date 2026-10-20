@@ -15,6 +15,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 
 import { updateCategory, deleteCategory } from "../../actions/stockAction";
 
@@ -160,7 +161,6 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
             marginTop: 2,
             marginBottom: 2,
             background: "white",
-            // borderRadius: "10px",
             borderTopLeftRadius: 10,
             borderTopRightRadius: 10,
           }}
@@ -223,11 +223,20 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
                                 marginBottom: 1,
                                 background: "white",
                                 borderRadius: "10px",
+                                "& .MuiInputBase-input": {
+                                  textAlign: "center",
+                                },
                               }}
                               inputProps={{
                                 autoComplete: "new-email",
                               }}
-                              style={{ color: "black !important" }}
+                              InputProps={{
+                                startAdornment: (
+                                  <DragIndicatorIcon
+                                    style={{ color: "black", marginLeft: '-10px' }}
+                                  />
+                                ),
+                              }}
                             />
                           </Grid>
                           <Grid
@@ -257,6 +266,7 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
                     )}
                   </Draggable>
                 ))}
+                {provided.placeholder}
               </div>
             )}
           </Droppable>

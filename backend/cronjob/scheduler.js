@@ -35,7 +35,7 @@ const main = async () => {
   const requestDelay = Math.ceil((60 * 1000) / requestsPerMinute); // Delay between each request in milliseconds
 
   for (let index = 0; index < symbolLists.length; index++) {
-  // for (let index = 0; index < 0; index++) {
+    // for (let index = 0; index < 0; index++) {
     const element = symbolLists[index];
     const symbol = element.symbol;
 
@@ -51,32 +51,63 @@ const main = async () => {
 
       const sector = response.data.Sector;
       const MarketCapitalization = response.data.MarketCapitalization;
-      const Beta1 = response.data.Beta;
-      const SharesOutstanding = response.data.SharesOutstanding;
+      let Beta1 = response.data.Beta;
+      let SharesOutstanding = response.data.SharesOutstanding;
       const industry = response.data.Industry;
       const name = response.data.Name;
-      const PERatio = response.data.PERatio;
-      const dividend_Yield = response.data.DividendYield;
-      const PriceToBookRatio = response.data.PriceToBookRatio;
+      let PERatio = response.data.PERatio;
+      let dividend_Yield = response.data.DividendYield;
+      let PriceToBookRatio = response.data.PriceToBookRatio;
 
-      console.log(Beta1);
+      console.log(Beta1, PriceToBookRatio);
 
       if (
         MarketCapitalization === "None" ||
-        Beta1 === "None" ||
-        SharesOutstanding === "None" ||
-        PERatio === "None" ||
-        dividend_Yield === "None" ||
-        PriceToBookRatio === "None" ||
+        // Beta1 === "None" ||
+        // SharesOutstanding === "None" ||
+        // PERatio === "None" ||
+        // dividend_Yield === "None" ||
+        // PriceToBookRatio === "None" ||
         MarketCapitalization === undefined ||
-        Beta1 === undefined ||
-        SharesOutstanding === undefined ||
-        PERatio === undefined ||
-        dividend_Yield === undefined ||
-        PriceToBookRatio === undefined
+        MarketCapitalization === "-"
+        // Beta1 === undefined ||
+        // SharesOutstanding === undefined ||
+        // PERatio === undefined ||
+        // dividend_Yield === undefined ||
+        // PriceToBookRatio === undefined
       ) {
         continue;
       }
+
+      const convertToZeroIfNone = (value) =>
+        value === "None" || value === undefined || value === "-"
+          ? 0
+          : parseFloat(value);
+      Beta1 = convertToZeroIfNone(Beta1);
+      SharesOutstanding = convertToZeroIfNone(SharesOutstanding);
+      PERatio = convertToZeroIfNone(PERatio);
+      dividend_Yield = convertToZeroIfNone(dividend_Yield);
+      PriceToBookRatio = convertToZeroIfNone(PriceToBookRatio);
+
+      // if (Beta1 === "None" || Beta1 === undefined) {
+      //   Beta1 = 0;
+      // }
+
+      // if (SharesOutstanding === "None" || SharesOutstanding === undefined) {
+      //   SharesOutstanding = 0;
+      // }
+
+      // if (PERatio === "None" || PERatio === undefined) {
+      //   PERatio = 0;
+      // }
+
+      // if (dividend_Yield === "None" || dividend_Yield === undefined) {
+      //   dividend_Yield = 0;
+      // }
+
+      // if (PriceToBookRatio === "None" || PriceToBookRatio === undefined) {
+      //   PriceToBookRatio = 0;
+      // }
 
       const marketCap = parseFloat(MarketCapitalization);
       const beta = parseFloat(Beta1);
@@ -135,7 +166,7 @@ const main = async () => {
 
 main();
 
-// Schedule the task to run every 3 hours
+// Schedule the task to run every one day
 // You can modify '0 */8 * * *' to set your desired cron interval
 cron.schedule("0 8 * * *", () => {
   // midnight 00:00 in PST

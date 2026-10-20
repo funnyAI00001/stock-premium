@@ -32,17 +32,18 @@ const BasicFilters = () => {
     marginTop: isSmScreen ? 25 : 15,
     padding: isSmScreen ? "25px 100px" : "25px 5px",
   };
-  const [selectedBetas, setSelectedBetas] = useState(["Low"]);
+  const [selectedBetas, setSelectedBetas] = useState(["Low", "Mid", "High"]);
   const [minSharePrice, setMinSharePrice] = useState(0);
-  const [maxSharePrice, setMaxSharePrice] = useState(100);
-  const [minMarketCap, setMinMarketCap] = useState("250M");
-  const [maxMarketCap, setMaxMarketCap] = useState("100B");
+  const [maxSharePrice, setMaxSharePrice] = useState(1000);
+  const [minMarketCap, setMinMarketCap] = useState("0B");
+  const [maxMarketCap, setMaxMarketCap] = useState("10T");
   const [selectedSectors, setSelectedSectors] = useState([]);
-  const [minPE, setMinPE] = useState(0);
-  const [maxPE, setMaxPE] = useState(5);
-  const [divYield, setDivYield] = useState(1);
-  const [minPB, setMinPB] = useState(0);
-  const [maxPB, setMaxPB] = useState(5);
+  const [minPE, setMinPE] = useState(-100000);
+  const [maxPE, setMaxPE] = useState(10000000);
+  const [minDivYield, setMinDivYield] = useState(0);
+  const [maxDivYield, setMaxDivYield] = useState(100);
+  const [minPB, setMinPB] = useState(-100000);
+  const [maxPB, setMaxPB] = useState(10000000);
   const sectors = [
     "Energy & Utilities",
     "Financial Services",
@@ -113,7 +114,8 @@ const BasicFilters = () => {
           maxSharePrice: maxSharePrice !== "" ? maxSharePrice : 1e6,
           minPE: minPE,
           maxPE: maxPE,
-          divYield: divYield,
+          minDivYield: minDivYield,
+          maxDivYield: maxDivYield,
           minPB: minPB,
           maxPB: maxPB,
         },
@@ -399,21 +401,54 @@ const BasicFilters = () => {
                 "& .MuiSelect-select": { borderColor: "white" },
               }}
             >
-              <InputLabel id="divYield">Div % Yield</InputLabel>
+              <InputLabel id="divYield">Div % Min</InputLabel>
               <Select
                 labelId="divYield"
                 id="divYield"
-                label="Div % Yield"
-                value={divYield}
+                label="Div % Min"
+                value={minDivYield}
                 onChange={(event) => {
-                  setDivYield(event.target.value);
+                  setMinDivYield(event.target.value);
                 }}
               >
-                <MenuItem value={0}>0</MenuItem>
-                <MenuItem value={1}>0-2%</MenuItem>
-                <MenuItem value={2}>2-5%</MenuItem>
-                <MenuItem value={3}>5-7%</MenuItem>
-                <MenuItem value={4}>{">"}7%</MenuItem>
+                <MenuItem value={0}>Min</MenuItem>
+                <MenuItem value={1}>1%</MenuItem>
+                <MenuItem value={2}>2%</MenuItem>
+                <MenuItem value={3}>3%</MenuItem>
+                <MenuItem value={4}>4%</MenuItem>
+                <MenuItem value={5}>5%</MenuItem>
+                <MenuItem value={6}>6%</MenuItem>
+                <MenuItem value={7}>7%</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={5} sm={4} display="flex" justifyContent="center">
+            <FormControl
+              sx={{
+                m: 1,
+                margin: 0,
+                width: "100%",
+                "& .MuiSelect-select": { borderColor: "white" },
+              }}
+            >
+              <InputLabel id="divYield">Div % Max</InputLabel>
+              <Select
+                labelId="divYield"
+                id="divYield"
+                label="Div % Max"
+                value={maxDivYield}
+                onChange={(event) => {
+                  setMaxDivYield(event.target.value);
+                }}
+              >
+                <MenuItem value={100}>Max</MenuItem>
+                <MenuItem value={7}>7%</MenuItem>
+                <MenuItem value={6}>6%</MenuItem>
+                <MenuItem value={5}>5%</MenuItem>
+                <MenuItem value={4}>4%</MenuItem>
+                <MenuItem value={3}>3%</MenuItem>
+                <MenuItem value={2}>2%</MenuItem>
+                <MenuItem value={1}>1%</MenuItem>
               </Select>
             </FormControl>
           </Grid>

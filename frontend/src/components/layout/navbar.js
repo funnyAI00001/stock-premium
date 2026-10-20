@@ -23,7 +23,7 @@ import CameraIcon from "@mui/icons-material/Camera";
 // import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
 import KeyboardDoubleArrowUpIcon from "@mui/icons-material/KeyboardDoubleArrowUp";
-import HandshakeIcon from '@mui/icons-material/Handshake';
+import HandshakeIcon from "@mui/icons-material/Handshake";
 import "@fontsource/roboto";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -175,7 +175,10 @@ const DrawerAppBar = (props) => {
                   <ForumIcon />
                 )}
               </ListItemIcon>
-              <NavLink to={routes[index]} style={{ textDecoration: "none" }}>
+              <NavLink
+                to={routes[index]}
+                style={{ textDecoration: "none", color: "white" }}
+              >
                 <ListItemText primary={text} />
               </NavLink>
             </ListItemButton>
@@ -193,8 +196,11 @@ const DrawerAppBar = (props) => {
             <ListItemIcon>
               <HandshakeIcon />
             </ListItemIcon>
-            <NavLink to={routes[6]} style={{ textDecoration: "none" }}>
-              <ListItemText primary='Contact Us' />
+            <NavLink
+              to={routes[6]}
+              style={{ textDecoration: "none", color: "white" }}
+            >
+              <ListItemText primary="Contact Us" />
             </NavLink>
           </ListItemButton>
         </ListItem>

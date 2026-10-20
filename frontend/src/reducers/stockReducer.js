@@ -12,6 +12,10 @@ import {
   SET_WEEKLY_EXPIRY_DATES,
   GET_SYMBOLLISTS,
   GET_BASIC_FILTER_RESULTS,
+  SET_SYMBOLS_FOR_OPTIONS_FILTER,
+  GET_OPTIONS_FILTER_RESULT,
+  GET_STOCKS,
+  GET_SEARCH_FILTER_RESULTS,
 } from "../actions/types";
 
 const initialState = {
@@ -42,6 +46,10 @@ const initialState = {
   symbolLists: [],
   basicFilterResult: [],
   available_symbols: [], // available symbols in the backend
+  symbolsForOptionsFilter: [],
+  optionFilterResult: { symbols: [] },
+  stocks: [],
+  searchFilterResult: [],
 };
 
 const stockReducer = (state = initialState, action) => {
@@ -163,6 +171,37 @@ const stockReducer = (state = initialState, action) => {
         basicFilterResult: basicFilterResult,
       };
 
+    case SET_SYMBOLS_FOR_OPTIONS_FILTER:
+      const { symbols } = action.payload;
+
+      return {
+        ...state,
+        symbolsForOptionsFilter: symbols,
+      };
+
+    case GET_OPTIONS_FILTER_RESULT:
+      const { optionFilterResult } = action.payload;
+
+      return {
+        ...state,
+        optionFilterResult: optionFilterResult,
+      };
+
+    case GET_STOCKS:
+      const { stocks } = action.payload;
+
+      return {
+        ...state,
+        stocks: stocks,
+      };
+
+    case GET_SEARCH_FILTER_RESULTS:
+      const { searchFilterResult } = action.payload;
+
+      return {
+        ...state,
+        searchFilterResult: searchFilterResult
+      }
     default:
       return state;
   }

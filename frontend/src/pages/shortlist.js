@@ -9,7 +9,10 @@ import { useSelector, useDispatch } from "react-redux";
 import { useAuth0 } from "@auth0/auth0-react";
 
 import { getCategory } from "../actions/stockAction";
-import { setSelectedSymbolsForCalcuation } from "../actions/stockAction";
+import {
+  setSelectedSymbolsForCalcuation,
+  getStocks,
+} from "../actions/stockAction";
 
 import AddCategory from "../components/category/addCategory";
 import CustomAlert from "../components/customAlert";
@@ -54,6 +57,7 @@ const Shortlist = () => {
 
   useEffect(() => {
     dispatch(getCategory({ user }));
+    dispatch(getStocks());
   }, [dispatch, user]);
 
   return (

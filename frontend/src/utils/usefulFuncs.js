@@ -39,3 +39,21 @@ export const formatNumber = (num) => {
   
   return num.toString();
 };
+
+export const formatDate = (inputDate) => {
+  // Split the input date string by "/"
+  const parts = inputDate.split("/");
+
+  // Create a new Date object with the parsed parts
+  const date = new Date(parts[2], parts[0] - 1, parts[1]);
+
+  // Format the date to 'YYYY-MM-DD' format
+  const formattedDate =
+    date.getFullYear() +
+    "-" +
+    String(date.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(date.getDate()).padStart(2, "0");
+
+  return formattedDate;
+};

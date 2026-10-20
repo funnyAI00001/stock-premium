@@ -4,7 +4,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import LoadingOverlay from "../dialog/loadingOverlay";
 import Stripe from "../../pages/stripe";
 
-import { getExpirations, getSymbolLists } from "../../actions/stockAction";
+import { getExpirations, getSymbolLists, getStocks } from "../../actions/stockAction";
 import { useDispatch, useSelector } from "react-redux";
 import { getCheckoutSessionId } from "../../actions/stripeAction";
 
@@ -24,6 +24,7 @@ const PrivateRoute = ({ component: Component }) => {
   useEffect(() => {
     dispatch(getExpirations());
     dispatch(getSymbolLists());
+    dispatch(getStocks())
   }, [dispatch]);
 
   useEffect(() => {

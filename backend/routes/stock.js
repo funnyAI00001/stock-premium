@@ -368,8 +368,12 @@ router.post("/getWeeklyExpiryDates", async (req, res) => {
           commonDates[date] = 1;
         }
       });
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      if (err.response.status === 404) {
+        continue;
+      }
+
+      console.log(err);
       res.status(500).json({ message: "server error" });
     }
   }
@@ -450,7 +454,9 @@ router.post("/getBasicResult", async (req, res) => {
     maxSharePrice,
     minPE,
     maxPE,
-    divYield,
+    // divYield,
+    minDivYield,
+    maxDivYield,
     minPB,
     maxPB,
   } = req.body;
@@ -469,32 +475,32 @@ router.post("/getBasicResult", async (req, res) => {
   };
 
   const betaQuery = betas.map((category) => ({ beta: beta[category] }));
-  let divYieldQuery;
+  // let divYieldQuery;
 
-  switch (divYield) {
-    case 0:
-      divYieldQuery = { $eq: 0 };
-      break;
+  // switch (divYield) {
+  //   case 0:
+  //     divYieldQuery = { $eq: 0 };
+  //     break;
 
-    case 1:
-      divYieldQuery = { $gt: 0, $lte: 0.02 };
-      break;
+  //   case 1:
+  //     divYieldQuery = { $gt: 0, $lte: 0.02 };
+  //     break;
 
-    case 2:
-      divYieldQuery = { $gt: 0.02, $lte: 0.05 };
-      break;
+  //   case 2:
+  //     divYieldQuery = { $gt: 0.02, $lte: 0.05 };
+  //     break;
 
-    case 3:
-      divYieldQuery = { $gt: 0.05, $lte: 0.07 };
-      break;
+  //   case 3:
+  //     divYieldQuery = { $gt: 0.05, $lte: 0.07 };
+  //     break;
 
-    case 4:
-      divYieldQuery = { $gt: 0.07 };
-      break;
+  //   case 4:
+  //     divYieldQuery = { $gt: 0.07 };
+  //     break;
 
-    default:
-      break;
-  }
+  //   default:
+  //     break;
+  // }
 
   const minMarketCapQuery = convertStringToNumber(minMarketCap);
   const maxMarketCapQuery = convertStringToNumber(maxMarketCap);
@@ -506,7 +512,7 @@ router.post("/getBasicResult", async (req, res) => {
     PE: { $gte: minPE, $lte: maxPE },
     PB: { $gte: minPB, $lte: maxPB },
     $or: betaQuery,
-    DividendYield: divYieldQuery
+    DividendYield: { $gte: minDivYield / 100, $lte: maxDivYield / 100 },
   });
 
   res.status(200).json({ basicFilterResult });
@@ -534,5 +540,269 @@ const convertStringToNumber = (str) => {
     return NaN;
   }
 };
+
+router.post("/getOptions", async (req, res) => {
+  const {
+    selectedStrikePriceType,
+    expiryDate,
+    minPremium,
+    minTradeROI,
+    minAnnualROI,
+    minOI,
+    maxSpread,
+    symbolsForOptionsFilter,
+  } = req.body;
+
+  const premiums = [];
+  const ROIs = [];
+  const annualROIs = [];
+  const OIs = [];
+  const BAs = [];
+  const sharePrices = [];
+  const strikePrices = [];
+  const IVs = [];
+  const expiry_dates = [];
+  const filteredSymbols = [];
+  const token = process.env.TOKEN || "";
+
+  for (let index = 0; index < symbolsForOptionsFilter.length; index++) {
+    const symbol = symbolsForOptionsFilter[index];
+
+    let response = null;
+
+    try {
+      response = await axios.get(
+        "https://api.marketdata.app/v1/stocks/quotes/" + symbol,
+        {
+          params: {
+            Accept: "application/json",
+            token: token,
+          },
+        }
+      );
+    } catch (error) {
+      console.log("Error occurred while fetching data:", error.message);
+
+      if (error.response.status == 404) {
+        continue;
+      }
+      res.status(500).json({ message: "Data not found for symbol" });
+      return;
+    }
+
+    if (response.data.bid == 0.0) {
+      res.status(500).json({ message: "service not available" });
+    }
+
+    let daysToExpirationDate = 1;
+    const startDate = new Date(expiryDate);
+    const current = new Date();
+
+    // Calculate the time difference in milliseconds
+    const timeDifference = Math.abs(current.getTime() - startDate.getTime());
+
+    // Convert the time difference from milliseconds to days
+    daysToExpirationDate = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+    try {
+      const respon = await axios.get(
+        `https://api.marketdata.app/v1/options/chain/${symbol}/?expiration=${expiryDate}&side=call&token=${token}`
+      );
+
+      if (respon.data.s === "no_data") {
+        continue;
+      }
+
+      const sharePrice = response.data.bid[0];
+      const strike = respon.data.strike;
+      const mid = respon.data.mid;
+      const openInterest = respon.data.openInterest;
+      const impliedVolatility = respon.data.iv;
+      const bid = respon.data.iv;
+      const ask = respon.data.ask;
+
+      let OTMindex = 0;
+      let OTMpercent = 0;
+
+      switch (selectedStrikePriceType) {
+        case "ATM":
+          OTMpercent = 0;
+          break;
+
+        case "5% OTM":
+          OTMpercent = 5;
+          break;
+
+        case "10% OTM":
+          OTMpercent = 10;
+          break;
+
+        default:
+          break;
+      }
+
+      for (let index = 1; index < strike.length; index++) {
+        // Finding ATM
+        const diff1 = Math.abs(
+          sharePrice * (1 + OTMpercent / 100) - strike[OTMindex]
+        );
+        // const diff4 = Math.abs(sharePrice * 1.05 - strike[index]);
+        const diff2 = Math.abs(
+          sharePrice * (1 + OTMpercent / 100) - strike[index]
+        );
+
+        if (diff2 < diff1 && strike[index] > sharePrice) {
+          OTMindex = index;
+        }
+      }
+
+      const premium = mid[OTMindex] * 100;
+      const strikePrice = strike[OTMindex];
+      const ROI = premium / sharePrice;
+      const annualROI =
+        (Math.pow(1 + ROI / 100, 365 / daysToExpirationDate) - 1) * 100;
+      const OI = openInterest[OTMindex];
+      const iv = impliedVolatility[OTMindex];
+      const BA = (bid[OTMindex] / ask[OTMindex]) * 100;
+
+      if (
+        premium < minPremium ||
+        ROI < minTradeROI ||
+        annualROI < minAnnualROI ||
+        OI < minOI
+      ) {
+        continue;
+      }
+
+      switch (maxSpread) {
+        case "All":
+          break;
+
+        case "Narrow":
+          if (!(BA > 0 && BA <= 1)) {
+            continue;
+          }
+
+          break;
+
+        case "Moderate":
+          if (!(BA > 1 && BA <= 2.5)) {
+            continue;
+          }
+
+          break;
+
+        case "Wide":
+          if (!(BA > 2.5 && BA <= 5)) {
+            console.log("test");
+            continue;
+          }
+
+          break;
+
+        case "Very Wide":
+          if (!(BA > 5)) {
+            continue;
+          }
+
+          break;
+
+        default:
+          break;
+      }
+
+      sharePrices.push(sharePrice);
+      expiry_dates.push(expiryDate);
+      strikePrices.push(strikePrice);
+      premiums.push(premium.toFixed(0));
+      ROIs.push(ROI.toFixed(2));
+      annualROIs.push(annualROI.toFixed(2));
+      OIs.push(OI);
+      IVs.push(iv.toFixed(2));
+      BAs.push(BA.toFixed(2));
+      filteredSymbols.push(symbol);
+    } catch (err) {
+      console.log("Error in fetching options chain: " + err.message);
+      if (err.response.status != 404) {
+        console.log(err.response.status);
+        res.status(500).json({ message: "Error in  fetching options chain" });
+        return;
+      }
+    }
+  }
+
+  // console.log({
+  //   symbols: filteredSymbols,
+  //   sharePrices,
+  //   expiry_dates,
+  //   strikePrices,
+  //   premiums,
+  //   ROIs,
+  //   annualROIs,
+  //   OIs,
+  //   IVs,
+  //   BAs,
+  // });
+
+  res.status(200).json({
+    optionFilterResult: {
+      symbols: filteredSymbols,
+      sharePrices,
+      expiry_dates,
+      strikePrices,
+      premiums,
+      ROIs,
+      annualROIs,
+      OIs,
+      IVs,
+    },
+  });
+});
+
+router.get("/getStocks", async (req, res) => {
+  const stocks = await Stock.find({});
+
+  res.status(200).json({ stocks });
+});
+
+router.post("/getSearchResult", async (req, res) => {
+  const {
+    industries,
+    betas,
+    minMarketCap,
+    maxMarketCap,
+    minSharePrice,
+    maxSharePrice,
+    minPE,
+    maxPE,
+    minDivYield,
+    maxDivYield,
+    minPB,
+    maxPB,
+  } = req.body;
+
+  const beta = {
+    Low: { $lt: 0.9 },
+    Mid: { $gte: 0.9, $lte: 1.1 },
+    High: { $gt: 1.1 },
+  };
+
+  const betaQuery = betas.map((category) => ({ beta: beta[category] }));
+
+  const minMarketCapQuery = convertStringToNumber(minMarketCap);
+  const maxMarketCapQuery = convertStringToNumber(maxMarketCap);
+
+  const searchFilterResult = await Stock.find({
+    industry: { $in: industries },
+    sharePrice: { $gte: minSharePrice, $lte: maxSharePrice },
+    marketCap: { $gte: minMarketCapQuery, $lte: maxMarketCapQuery },
+    PE: { $gte: minPE, $lte: maxPE },
+    PB: { $gte: minPB, $lte: maxPB },
+    $or: betaQuery,
+    DividendYield: { $gte: minDivYield / 100, $lte: maxDivYield / 100 },
+  });
+
+  res.status(200).json({ searchFilterResult });
+});
 
 module.exports = router;

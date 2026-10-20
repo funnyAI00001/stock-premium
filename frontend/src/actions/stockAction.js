@@ -12,6 +12,10 @@ import {
   SET_WEEKLY_EXPIRY_DATES,
   GET_SYMBOLLISTS,
   GET_BASIC_FILTER_RESULTS,
+  SET_SYMBOLS_FOR_OPTIONS_FILTER,
+  GET_OPTIONS_FILTER_RESULT,
+  GET_STOCKS,
+  GET_SEARCH_FILTER_RESULTS
 } from "./types";
 import { backendUrl } from "../config/url";
 
@@ -35,7 +39,7 @@ export const getCoveredCallPremium = (data, callback) => async (dispatch) => {
           OTM10ROIs,
           OTM10annualROIs,
           expiration_date,
-          available_symbols
+          available_symbols,
         } = res.data;
 
         dispatch({
@@ -55,7 +59,7 @@ export const getCoveredCallPremium = (data, callback) => async (dispatch) => {
             OTM10ROIs,
             OTM10annualROIs,
             expiration_date,
-            available_symbols
+            available_symbols,
           },
         });
 
@@ -331,6 +335,65 @@ export const getBasicResult = (data, callback) => async (dispatch) => {
     dispatch({
       type: GET_BASIC_FILTER_RESULTS,
       payload: { basicFilterResult },
+    });
+
+    callback && callback();
+  } catch (error) {
+    console.log(error.message);
+    callback && callback();
+  }
+};
+
+export const set_Symbols_For_Optionsfilter = (symbols) => async (dispatch) => {
+  dispatch({
+    type: SET_SYMBOLS_FOR_OPTIONS_FILTER,
+    payload: { symbols },
+  });
+};
+
+export const getOptions = (data, callback) => async (dispatch) => {
+  try {
+    const res = await axios.post(backendUrl + "/api/stock/getOptions", data);
+    const { optionFilterResult } = res.data;
+
+    dispatch({
+      type: GET_OPTIONS_FILTER_RESULT,
+      payload: { optionFilterResult },
+    });
+
+    callback && callback();
+  } catch (error) {
+    callback && callback();
+    console.log(error.message);
+  }
+};
+
+export const getStocks = () => async (dispatch) => {
+  try {
+    const res = await axios.get(backendUrl + "/api/stock/getStocks");
+    const { stocks } = res.data;
+
+    dispatch({
+      type: GET_STOCKS,
+      payload: { stocks },
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getSearchResult = (data, callback) => async (dispatch) => {
+  try {
+    const res = await axios.post(
+      backendUrl + "/api/stock/getSearchResult",
+      data
+    );
+
+    const { searchFilterResult } = res.data;
+
+    dispatch({
+      type: GET_SEARCH_FILTER_RESULTS,
+      payload: { searchFilterResult },
     });
 
     callback && callback();

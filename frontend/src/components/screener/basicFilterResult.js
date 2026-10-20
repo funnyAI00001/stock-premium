@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "@emotion/react";
 import {
   useMediaQuery,
@@ -11,12 +11,17 @@ import {
 } from "@mui/material";
 import Checkbox from "@mui/material/Checkbox";
 
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+
 import { formatNumber } from "../../utils/usefulFuncs";
+
+import { set_Symbols_For_Optionsfilter } from "../../actions/stockAction";
 
 const BasicFilterResult = () => {
   const theme = useTheme();
+  const dispatch = useDispatch();
   const isSmScreen = useMediaQuery("(min-width:600px)");
+  const [symbolsForOptionsFilter, setSymbolsForOptionsFilter] = useState([]);
   const fieldsetStyle = {
     borderRadius: 5,
     borderColor: theme.palette.text.third,
@@ -40,6 +45,20 @@ const BasicFilterResult = () => {
   const basicFilterResult = useSelector(
     (state) => state.stock.basicFilterResult
   );
+
+  const handleCheckChange = (event, item) => {
+    if (event.target.checked) {
+      setSymbolsForOptionsFilter([...symbolsForOptionsFilter, item.symbol]);
+    } else {
+      setSymbolsForOptionsFilter(
+        [...symbolsForOptionsFilter].filter((one) => one !== item.symbol)
+      );
+    }
+  };
+
+  useEffect(() => {
+    dispatch(set_Symbols_For_Optionsfilter(symbolsForOptionsFilter))
+  }, [symbolsForOptionsFilter]);
 
   return (
     <fieldset style={fieldsetStyle}>
@@ -76,7 +95,11 @@ const BasicFilterResult = () => {
                   </TableCell>
                   {basicFilterResult.map((item, index) => (
                     <TableCell key={index} align="center">
-                      <Checkbox inputProps={{ "aria-label": "controlled" }} />
+                      <Checkbox
+                        inputProps={{ "aria-label": "controlled" }}
+                        checked={symbolsForOptionsFilter.includes(item.symbol)}
+                        onClick={(event) => handleCheckChange(event, item)}
+                      />
                     </TableCell>
                   ))}
                 </TableRow>
