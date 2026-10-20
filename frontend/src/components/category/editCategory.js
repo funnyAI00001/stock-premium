@@ -8,7 +8,7 @@ import {
   TextField,
 } from "@mui/material";
 import { useTheme } from "@emotion/react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -17,12 +17,12 @@ import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 
-import { updateCategory, deleteCategory } from "../../actions/stockAction";
-
 import LoadingOverlay from "../dialog/loadingOverlay";
 import CustomAlert from "../customAlert";
 import ConfirmationDialog from "../dialog/confirmDialog";
+import UpgradeFreeAccount from "../dialog/upgradeFreeAccount";
 
+import { updateCategory, deleteCategory } from "../../actions/stockAction";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
@@ -37,7 +37,13 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
   const [openSaveFailure, setOpenSaveFailure] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [openEmptySymbolsAlert, setOpenEmptySymbolsAlert] = useState(false);
-  const [openTenSymbolsAlert, setOpenTenSymbolsAlert] = useState(false);
+  const [openMaxSymbolsAlert, setOpenMaxSymbolsAlert] = useState(false);
+  const [maxSymbolAlertText, setMaxSymbolAlertText] = useState("");
+  const subscriptionStatus = useSelector(
+    (state) => state.stripe.subscriptionStatus
+  );
+  const [openUpgradeFreeAccountDialog, setOpenUpgradeFreeAccountDialog] =
+    useState(false);
 
   const handleSymbolChange = (e, index) => {
     const input = e.target.value.toUpperCase(); // Convert input text to uppercase
@@ -59,9 +65,18 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
   };
 
   const addSymbol = () => {
-    if (symbols.length === 10) {
-      setOpenTenSymbolsAlert(true);
-      return;
+    if (subscriptionStatus === "trial_expired") {
+      if (symbols.length >= 3) {
+        setOpenUpgradeFreeAccountDialog(true);
+        
+        return;
+      }
+    } else {
+      if (symbols.length === 10) {
+        setMaxSymbolAlertText("One category can have ten symbols at max!");
+        setOpenMaxSymbolsAlert(true);
+        return;
+      }
     }
 
     setSymbols([...symbols, ""]);
@@ -233,7 +248,10 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
                               InputProps={{
                                 startAdornment: (
                                   <DragIndicatorIcon
-                                    style={{ color: "black", marginLeft: '-10px' }}
+                                    style={{
+                                      color: "black",
+                                      marginLeft: "-10px",
+                                    }}
                                   />
                                 ),
                               }}
@@ -345,10 +363,10 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
         onClose={() => setOpenEmptySymbolsAlert(false)}
       />
       <CustomAlert
-        openState={openTenSymbolsAlert}
+        openState={openMaxSymbolsAlert}
         severity="warning"
-        text="One category can have ten symbols at max!"
-        onClose={() => setOpenTenSymbolsAlert(false)}
+        text={maxSymbolAlertText}
+        onClose={() => setOpenMaxSymbolsAlert(false)}
       />
       <ConfirmationDialog
         text="Are you sure you want to delete the category?"
@@ -357,6 +375,13 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
         title="Confirm Dialog"
         onConfirm={() => {
           handleDeleteConfirm();
+        }}
+      />
+
+      <UpgradeFreeAccount
+        open={openUpgradeFreeAccountDialog}
+        onClose={() => {
+          setOpenUpgradeFreeAccountDialog(false);
         }}
       />
     </Box>

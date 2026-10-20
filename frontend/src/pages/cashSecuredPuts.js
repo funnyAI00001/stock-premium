@@ -11,26 +11,35 @@ import {
   InputLabel,
   Select,
   IconButton,
+  Checkbox,
+  FormGroup,
+  FormControlLabel,
 } from "@mui/material";
 import { useSelector, connect, useDispatch } from "react-redux";
+import { useLocation } from "react-router-dom";
 
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import moment from "moment";
-import Checkbox from "@mui/material/Checkbox";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
 
 import CashSecuredPutsReturnTable from "../components/stock/cashSecuredPutsReturnsTable";
 import LoadingOverlay from "../components/dialog/loadingOverlay";
 import CustomAlert from "../components/customAlert";
+import CustomAlert2 from "../components/customAlert2";
+import ConversionFreeAccount from "../components/dialog/conversionFreeAccount";
+import UpgradeFreeAccount from "../components/dialog/upgradeFreeAccount";
+
+import { useAuth0 } from "@auth0/auth0-react";
 
 import {
   getCashSecuredPuts,
   getExpirations,
   setOTMITMPercentages,
   getWeeklyExpiryDates,
+  getMarketStatus,
 } from "../actions/stockAction";
+import { increasePageClickCount } from "../actions/adminAction";
+import CalculationLimitDialog from "../components/dialog/calculationLimitDialog";
 
 const formatDate = (inputDate) => {
   // Split the input date string by "/"
@@ -62,7 +71,7 @@ const CashSecuredPuts = ({
 }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
-  const [symbols, setSymbols] = useState([""]);
+  const location = useLocation();
   const [selectedButton, setSelectedButton] = useState("ATM");
   const [gotFirstResult, setGotFirstResult] = useState(false);
   const [firstCalculate, setFirstCalculate] = useState(false);
@@ -96,7 +105,14 @@ const CashSecuredPuts = ({
   const [openWarningForNoSupportSymbol, setOpenWarningForNoSupportSymbol] =
     useState(false);
   const [openNoSymbolError, setOpenNoSymbolError] = useState(false);
+  const [openWarningForCalculationLimit, setOpenWarningForCalculationLimit] =
+    useState(false);
+  const [openWarningMarketClosed1, setOpenWarningMarketClosed1] =
+    useState(false);
 
+  const put_calculationLimit = useSelector(
+    (state) => state.stock.put_calculationLimit
+  );
   const service_error = useSelector((state) => state.stock.service_error);
   const server_error = useSelector((state) => state.stock.server_error);
   const symbol_error = useSelector(
@@ -105,10 +121,9 @@ const CashSecuredPuts = ({
   const option_error = useSelector(
     (state) => state.stock.options_not_found_error_message
   );
-  const selectedSymbolsForCalculation = useSelector(
-    (state) => state.stock.selectedSymbolsForCalculation
-  );
+
   const expirations = useSelector((state) => state.stock.expirations);
+  const marketStatus = useSelector((state) => state.stock.marketStatus);
   const available_symbols = useSelector(
     (state) => state.stock.available_symbols
   );
@@ -126,6 +141,46 @@ const CashSecuredPuts = ({
   const [isGettingWeeklyExpiryDates, setIsGettingWeeklyExpiryDates] =
     useState(false);
   const [totalExpirations, setTotalExpirations] = useState([]);
+  const { isAuthenticated, user, isLoading } = useAuth0();
+  const subscriptionStatus = useSelector(
+    (state) => state.stripe.subscriptionStatus
+  );
+  const userType = useSelector((state) => state.stripe.userType);
+  const selectedSymbolsForPut = useSelector(
+    (state) => state.stock.selectedSymbolsForPut
+  );
+
+  const urlParams = new URLSearchParams(location.search);
+  let symbolParam = urlParams.get("symbol");
+
+  if (symbolParam === null) {
+    symbolParam = [""];
+  } else {
+    symbolParam = symbolParam.split(",");
+  }
+
+  const [symbols, setSymbols] = useState(symbolParam);
+  const [openConversionFreeAccountDialog, setOpenConversionFreeAccountDialog] =
+    useState(false);
+  const [openUpgradeFreeAccountDialog, setOpenUpgradeFreeAccountDialog] =
+    useState(false);
+
+  useEffect(() => {
+    if (marketStatus === "closed") {
+      setOpenWarningMarketClosed1(true);
+    }
+  }, [marketStatus]);
+
+  // Initiate symbols with one received from shortlist
+  useEffect(() => {
+    // If the user directly goes to earn page, initiate symbols with one empty field
+    if (selectedSymbolsForPut.length === 0) {
+      return;
+    }
+
+    setSymbols(selectedSymbolsForPut);
+    setGotFirstResult(false);
+  }, [selectedSymbolsForPut]);
 
   useEffect(() => {
     if (ATMs.length > 0) {
@@ -134,17 +189,6 @@ const CashSecuredPuts = ({
       setGotFirstResult(false);
     }
   }, [ATMs]);
-
-  // Initiate symbols with one received from shortlist
-  useEffect(() => {
-    setSymbols(selectedSymbolsForCalculation);
-    setGotFirstResult(false);
-
-    // If the user directly goes to earn page, initiate symbols with one empty field
-    if (selectedSymbolsForCalculation.length === 0) {
-      setSymbols([""]);
-    }
-  }, [selectedSymbolsForCalculation]);
 
   useEffect(() => {
     if (expirations.length > 0) {
@@ -161,13 +205,12 @@ const CashSecuredPuts = ({
           dates.push(item);
         }
 
-        if (difference < minDifference && difference > 0) {
+        if (difference < minDifference && difference > 8) {
           minDifference = difference;
           minDate = item;
         }
       }
 
-      // setExpirationDate(dates[0].date);
       setExpirationDate(minDate.date);
       setAvailableExpirations(dates);
     }
@@ -260,7 +303,7 @@ const CashSecuredPuts = ({
     setMaxRisks3(risks);
     setMaxRORs3(RORs);
     setAnnualMaxRORs3(annualMaxRORs);
-  }, [ATMs, strikeATMs]);
+  }, [ATMs, strikeATMs, ITMs, OTMs]);
 
   // Set total expiry dates
   useEffect(() => {
@@ -283,6 +326,35 @@ const CashSecuredPuts = ({
     setTotalExpirations(sortedDates);
   }, [weeklyOption, availableExpirations, weekly_expiry_dates]);
 
+  useEffect(() => {
+    // increase page click count
+
+    dispatch(
+      increasePageClickCount({
+        page: "Puts",
+        userType: userType === null ? "Unknown" : userType,
+      })
+    );
+    dispatch(getMarketStatus());
+  }, [dispatch, userType]);
+
+  useEffect(() => {
+    if (put_calculationLimit && !isAuthenticated) {
+      //  For unknown users who are not logged in
+      setOpenWarningForCalculationLimit(true);
+
+      return;
+    } else if (
+      put_calculationLimit &&
+      isAuthenticated &&
+      subscriptionStatus === "trial_expired"
+    ) {
+      setOpenUpgradeFreeAccountDialog(true);
+
+      return;
+    }
+  }, [put_calculationLimit, isAuthenticated]);
+
   const handleSymbolChange = (e, index) => {
     const input = e.target.value.toUpperCase(); // Convert input text to uppercase
     const onlyUppercase = input.replace(/[^A-Z]/g, ""); // Remove any characters that are not uppercase letters
@@ -293,7 +365,22 @@ const CashSecuredPuts = ({
 
   // When 'calculate' button is clicked
   const handleCalculate = () => {
-    // If expiry date isn't seleced
+    if (put_calculationLimit && !isAuthenticated) {
+      //  For unknown users who are not logged in
+      setOpenWarningForCalculationLimit(true);
+
+      return;
+    } else if (
+      put_calculationLimit &&
+      isAuthenticated &&
+      subscriptionStatus === "trial_expired"
+    ) {
+      setOpenUpgradeFreeAccountDialog(true);
+
+      return;
+    }
+
+    // If expiry date isn't selected
     if (expiration_date === null || expiration_date === "") {
       setOpenExpiryNotSelectedError(true);
       return;
@@ -325,6 +412,10 @@ const CashSecuredPuts = ({
       isEarn: false,
       otmPercentage,
       itmPercentage,
+      isAuthenticated,
+      subscriptionStatus,
+      userType: userType ? userType : "Unknown",
+      email: isAuthenticated ? user.email : "Unknown",
     };
 
     setFirstCalculate(true);
@@ -392,10 +483,17 @@ const CashSecuredPuts = ({
   const firstCalculateSuccess = () => {
     setFirstCalculate(false);
     setOpenWarningForNoSupportSymbol(true);
+    // setOpenWarningMarketClosed1(true);
   };
 
   // Add symbol
   const addField = () => {
+    if (!isAuthenticated && symbols.length >= 3) {
+      setOpenConversionFreeAccountDialog(true);
+
+      return;
+    }
+
     if (symbols.length >= 10) {
       setOpenMaxSymbolCounts(true);
       return;
@@ -413,26 +511,51 @@ const CashSecuredPuts = ({
 
   // Weekly option select/disselect
   const handleWeeklyOption = (event) => {
-    setWeeklyOption(event.target.checked);
-    setOpenWarningForNoSupportSymbol(false);
-
-    if (event.target.checked) {
+    if (!isAuthenticated) {
+      setOpenConversionFreeAccountDialog(true);
+    } else if (isAuthenticated && subscriptionStatus === "trial_expired") {
+      setOpenUpgradeFreeAccountDialog(true);
+    } else if (isAuthenticated && subscriptionStatus !== "trial_expired") {
       const filteredSymbols = symbols.filter((item) => item !== "");
-      setSymbols(filteredSymbols);
-      setIsGettingWeeklyExpiryDates(true);
 
-      dispatch(
-        getWeeklyExpiryDates(
-          { symbols: filteredSymbols },
-          handleEndGettingWeeklyOption
-        )
-      );
+      if (filteredSymbols.length === 0) {
+        setOpenNoSymbolError(true);
+
+        return;
+      }
+
+      setWeeklyOption(event.target.checked);
+      setOpenWarningForNoSupportSymbol(false);
+
+      if (event.target.checked) {
+        setSymbols(filteredSymbols);
+        setIsGettingWeeklyExpiryDates(true);
+
+        dispatch(
+          getWeeklyExpiryDates(
+            { symbols: filteredSymbols },
+            handleEndGettingWeeklyOption
+          )
+        );
+      }
     }
   };
 
   const handleEndGettingWeeklyOption = () => {
     setIsGettingWeeklyExpiryDates(false);
   };
+
+  const handleOTM_ITM_PercentageClick = () => {
+    if (!isAuthenticated) {
+      setOpenConversionFreeAccountDialog(true);
+    } else if (isAuthenticated && subscriptionStatus === "trial_expired") {
+      setOpenUpgradeFreeAccountDialog(true);
+    }
+  };
+
+  if (isLoading) {
+    return <LoadingOverlay text="Loading..." color="success" />;
+  }
 
   return (
     <div
@@ -545,8 +668,14 @@ const CashSecuredPuts = ({
                   control={
                     <Checkbox
                       checked={weeklyOption}
-                      onChange={(e) => handleWeeklyOption(e)}
+                      onChange={(e) => {
+                        handleWeeklyOption(e);
+                      }}
                       inputProps={{ "aria-label": "controlled" }}
+                      // disabled={
+                      //   !isAuthenticated ||
+                      //   subscriptionStatus === "trial_expired"
+                      // }
                     />
                   }
                   label="Weekly Dates"
@@ -591,9 +720,15 @@ const CashSecuredPuts = ({
                   id="itm"
                   label="ITM(%)"
                   value={itmPercentage}
+                  disabled={
+                    !isAuthenticated || subscriptionStatus === "trial_expired"
+                  }
                   onChange={(event) => {
                     setItmPercentage(event.target.value);
                     setGotFirstResult(false);
+                  }}
+                  onClick={() => {
+                    handleOTM_ITM_PercentageClick();
                   }}
                 >
                   {availablePercentages.map((item, index) => (
@@ -610,9 +745,15 @@ const CashSecuredPuts = ({
                   id="otm"
                   label="OTM(%)"
                   value={otmPercentage}
+                  disabled={
+                    !isAuthenticated || subscriptionStatus === "trial_expired"
+                  }
                   onChange={(event) => {
                     setOtmPercentage(event.target.value);
                     setGotFirstResult(false);
+                  }}
+                  onClick={() => {
+                    handleOTM_ITM_PercentageClick();
                   }}
                 >
                   {availablePercentages.map((item, index) => (
@@ -630,7 +771,8 @@ const CashSecuredPuts = ({
           <Button
             sx={{
               margin: "auto",
-              marginY: 2,
+              marginTop: 2,
+              marginBottom: 8,
               background: `${theme.palette.text.third}`,
               border: `${theme.palette.text.third} solid 1px`,
               color: "white",
@@ -736,6 +878,19 @@ const CashSecuredPuts = ({
               {otmPercentage}% <br /> OTM
             </Button>
           </Box>
+
+          <Box display="flex" justifyContent="center">
+            <CustomAlert2
+              openState={openWarningMarketClosed1}
+              severity="warning"
+              text="Options premium data may have errors outside of trading hours of major US exchanges. If you see $0 premium value, 
+        try again once markets open. We are working with our data provider to resolve this issue."
+              autoHideDuration={null}
+              onClose={() => {
+                setOpenWarningMarketClosed1(false);
+              }}
+            />
+          </Box>
           <CashSecuredPutsReturnTable
             symbols={symbols}
             premium={premium}
@@ -830,7 +985,7 @@ const CashSecuredPuts = ({
         onClose={() => setOpenExpiryNotSelectedError(false)}
       />
 
-      {/* Expiry date 'not selected' error */}
+      {/* Error for max count */}
       <CustomAlert
         openState={openMaxSymbolCounts}
         severity="warning"
@@ -855,6 +1010,20 @@ const CashSecuredPuts = ({
         onClose={() => {
           setOpenNoSymbolError(false);
         }}
+      />
+
+      <CalculationLimitDialog
+        open={openWarningForCalculationLimit}
+        onClose={() => setOpenWarningForCalculationLimit(false)}
+      />
+
+      <ConversionFreeAccount
+        open={openConversionFreeAccountDialog}
+        onClose={() => setOpenConversionFreeAccountDialog(false)}
+      />
+      <UpgradeFreeAccount
+        open={openUpgradeFreeAccountDialog}
+        onClose={() => setOpenUpgradeFreeAccountDialog(false)}
       />
     </div>
   );

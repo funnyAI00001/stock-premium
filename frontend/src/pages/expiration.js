@@ -1,16 +1,16 @@
 import React from "react";
 import { useRef } from "react";
 import { connect } from "react-redux";
-import { InputLabel, Input } from "@mui/material";
+import { InputLabel, Input, Button, Typography } from "@mui/material";
+import { useTheme } from "@emotion/react";
 
 import ExpirationTable from "../components/stock/expirationTable";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
 
 import { uploadExpirations } from "../actions/stockAction";
 
 const Expiration = ({ uploadExpirations }) => {
   const fileInputRef = useRef(null);
+  const theme = useTheme();
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -28,8 +28,13 @@ const Expiration = ({ uploadExpirations }) => {
       </Typography>
       <div style={{ textAlign: "center", marginTop: 20 }}>
         <Button
-          variant="outlined"
-          color="primary"
+          sx={{
+            margin: "auto",
+            marginY: 2,
+            background: `${theme.palette.text.third}`,
+            border: `${theme.palette.text.third} solid 1px`,
+            color: "white",
+          }}
           onClick={() => {
             if (fileInputRef.current) {
               fileInputRef.current.click();
@@ -54,10 +59,8 @@ const Expiration = ({ uploadExpirations }) => {
   );
 };
 
-const mapStateToProps = (state) => ({});
-
 const mapDispatchToProps = (dispatch) => ({
   uploadExpirations: (data) => dispatch(uploadExpirations(data)),
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(Expiration);
+export default connect(null, mapDispatchToProps)(Expiration);

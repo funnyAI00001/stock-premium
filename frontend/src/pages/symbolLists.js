@@ -1,13 +1,10 @@
-import React, { useState } from "react";
-import { useRef } from "react";
-import { InputLabel, Input } from "@mui/material";
-
-import SymbolListTable from "../components/stock/symbolListsTable";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
+import React, { useState, useRef } from "react";
+import { InputLabel, Input, Typography, Button } from "@mui/material";
 
 import { useDispatch } from "react-redux";
 import { uploadSymbolLists } from "../actions/stockAction";
+
+import SymbolListTable from "../components/stock/symbolListsTable";
 import LoadingOverlay from "../components/dialog/loadingOverlay";
 
 const SymbolList = () => {

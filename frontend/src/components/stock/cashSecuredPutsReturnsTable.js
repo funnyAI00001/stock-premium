@@ -1,29 +1,32 @@
 import * as React from "react";
-import { useState } from "react";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableRow from "@mui/material/TableRow";
+import { useState, useEffect } from "react";
 
-import { Box, Button, Divider } from "@mui/material";
+import {
+  Box,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+} from "@mui/material";
 import { useTheme } from "@emotion/react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
-import PDFDocument from "./pdfDocument";
 import PDFDocumentForCashSecured from "./pdfDocumentForCashSecured";
+import AddCategory from "../category/addCategory";
+import ConversionFreeAccount from "../dialog/conversionFreeAccount";
 
 const CashSecuredPutsReturnTable = ({
   symbols,
   sharePrices,
   premium,
-
   expiration_date,
   strikePrices,
   dataForPdf,
   setGotFirstResult,
-  maxReturns,
   maxRisks,
   maxRORs,
   annualMaxRORs,
@@ -43,8 +46,12 @@ const CashSecuredPutsReturnTable = ({
   ];
 
   const [pdfName, setPdfName] = useState("");
+  const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
+  const { isAuthenticated } = useAuth0();
+  const [openConversionFreeAccountDialog, setOpenConversionFreeAccountDialog] =
+    useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const currentDate = new Date();
     const year = currentDate.getFullYear();
     const month = String(currentDate.getMonth() + 1).padStart(2, "0");
@@ -53,6 +60,10 @@ const CashSecuredPutsReturnTable = ({
     const formattedDate = `${year}-${month}-${day}`;
     setPdfName(formattedDate + ".pdf");
   }, []);
+
+  const handleSaveShortlist = () => {
+    setOpenCategoryDialog(true);
+  };
 
   return (
     <>
@@ -201,7 +212,6 @@ const CashSecuredPutsReturnTable = ({
                     </TableCell>
                   ))}
                 </TableRow>
-
                 <TableRow
                   sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                 >
@@ -307,7 +317,11 @@ const CashSecuredPutsReturnTable = ({
             marginTop: 2,
           }}
           onClick={() => {
-            navigate("/shortlist");
+            if (isAuthenticated) {
+              navigate("/shortlist");
+            } else {
+              setOpenConversionFreeAccountDialog(true);
+            }
           }}
         >
           Go to Shortlists
@@ -318,20 +332,64 @@ const CashSecuredPutsReturnTable = ({
             backgroundColor: theme.palette.text.third,
             color: "white",
             border: `${theme.palette.text.third} solid 1px`,
-            textDecoration: "none",
             marginTop: 2,
           }}
-        >
-          <PDFDownloadLink
-            document={<PDFDocumentForCashSecured symbols={symbols} dataForPdf={dataForPdf} />}
-            fileName={pdfName}
-            style={{ color: "white", textDecoration: "none" }}
-          >
-            {({ loading }) =>
-              loading ? "Loading document..." : "Export To PDF"
+          onClick={() => {
+            if (isAuthenticated) {
+              handleSaveShortlist();
+            } else {
+              setOpenConversionFreeAccountDialog(true);
             }
-          </PDFDownloadLink>
+          }}
+        >
+          Save to shortlist
         </Button>
+        <br />
+        <Button
+          sx={{
+            backgroundColor: theme.palette.text.third,
+            color: "white",
+            border: `${theme.palette.text.third} solid 1px`,
+            textDecoration: "none",
+            marginTop: 2,
+            marginBottom: 4,
+          }}
+          onClick={() => {
+            if (!isAuthenticated) {
+              setOpenConversionFreeAccountDialog(true);
+            }
+          }}
+        >
+          {isAuthenticated ? (
+            <PDFDownloadLink
+              document={
+                <PDFDocumentForCashSecured
+                  symbols={symbols}
+                  dataForPdf={dataForPdf}
+                />
+              }
+              fileName={pdfName}
+              style={{ color: "white", textDecoration: "none" }}
+            >
+              {({ loading }) =>
+                loading ? "Loading document..." : "Export To PDF"
+              }
+            </PDFDownloadLink>
+          ) : (
+            "Export To PDF"
+          )}
+        </Button>
+
+        <AddCategory
+          onClose={() => setOpenCategoryDialog(false)}
+          open={openCategoryDialog}
+          symbols={available_symbols}
+        />
+
+        <ConversionFreeAccount
+          open={openConversionFreeAccountDialog}
+          onClose={() => setOpenConversionFreeAccountDialog(false)}
+        />
       </div>
     </>
   );

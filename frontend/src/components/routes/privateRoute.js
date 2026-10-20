@@ -11,9 +11,6 @@ import { getCheckoutSessionId } from "../../actions/stripeAction";
 const PrivateRoute = ({ component: Component }) => {
   const { isAuthenticated, isLoading, user } = useAuth0();
   const dispatch = useDispatch();
-  const subscriptionStatus = useSelector(
-    (state) => state.stripe.subscriptionStatus
-  );
   const checkoutSessionId = useSelector(
     (state) => state.stripe.checkoutSessionId
   );
@@ -38,14 +35,13 @@ const PrivateRoute = ({ component: Component }) => {
     return <LoadingOverlay text="Loading..." color="success" />;
   } else if (
     isAuthenticated &&
-    checkoutSessionId !== null &&
-    subscriptionStatus === "complete"
+    checkoutSessionId !== null
   ) {
     console.log("component");
     return <Component />;
   } else if (
     isAuthenticated &&
-    (checkoutSessionId === null || subscriptionStatus !== "complete")
+    (checkoutSessionId === null )
   ) {
     console.log("stripe");
     return <Stripe />;

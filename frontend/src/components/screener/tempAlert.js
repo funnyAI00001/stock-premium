@@ -14,7 +14,7 @@ const TempAlert = () => {
         fontWeight: 600,
       }}
     >
-      Coming Soon: This feature is under development and does not work(yet)!
+      Coming Soon: This feature is under development - if you find a bug please let us know!!
     </Box>
   );
 };

@@ -1,17 +1,25 @@
 import * as React from "react";
 import { useState } from "react";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableRow from "@mui/material/TableRow";
 
-import { Box, Button, Divider } from "@mui/material";
+import {
+  Box,
+  Button,
+  Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Tooltip,
+} from "@mui/material";
 import { useTheme } from "@emotion/react";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 import PDFDocument from "./pdfDocument";
+import AddCategory from "../category/addCategory";
+import ConversionFreeAccount from "../dialog/conversionFreeAccount";
 
 const CoveredCallReturnsTable = ({
   symbols,
@@ -46,6 +54,10 @@ const CoveredCallReturnsTable = ({
   ];
 
   const [pdfName, setPdfName] = useState("");
+  const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
+  const { isAuthenticated } = useAuth0();
+  const [openConversionFreeAccountDialog, setOpenConversionFreeAccountDialog] =
+    useState(false);
 
   React.useEffect(() => {
     const currentDate = new Date();
@@ -56,6 +68,10 @@ const CoveredCallReturnsTable = ({
     const formattedDate = `${year}-${month}-${day}`;
     setPdfName(formattedDate + ".pdf");
   }, []);
+
+  const handleSaveShortlist = () => {
+    setOpenCategoryDialog(true);
+  };
 
   return (
     <>
@@ -151,9 +167,39 @@ const CoveredCallReturnsTable = ({
                     {rowNames[2]}
                   </TableCell>
                   {sharePrices.map((item, index) => (
-                    <TableCell align="center" key={index}>
-                      {expiration_date}
-                    </TableCell>
+                    <Tooltip
+                      title="Jump to 'Profit Horizon' to compare Expiry Dates"
+                      enterTouchDelay={0}
+                      leaveTouchDelay={1500}
+                      placement="top"
+                      key={index}
+                      PopperProps={{
+                        modifiers: [
+                          {
+                            name: "offset",
+                            options: {
+                              offset: [0, 0],
+                            },
+                          },
+                        ],
+                      }}
+                    >
+                      <TableCell
+                        align="center"
+                        key={index}
+                        sx={{ cursor: "pointer", color: "text.third" }}
+                        onClick={() => {
+                          navigate(
+                            `/profitHorizon?symbol=${available_symbols[index]}`
+                          );
+                        }}
+                      >
+                        <u>
+                          {" "}
+                          <i>{expiration_date}</i>
+                        </u>
+                      </TableCell>
+                    </Tooltip>
                   ))}
                 </TableRow>
                 <TableRow
@@ -386,7 +432,11 @@ const CoveredCallReturnsTable = ({
             marginTop: 2,
           }}
           onClick={() => {
-            navigate("/shortlist");
+            if (isAuthenticated) {
+              navigate("/shortlist");
+            } else {
+              setOpenConversionFreeAccountDialog(true);
+            }
           }}
         >
           Go to Shortlists
@@ -397,20 +447,61 @@ const CoveredCallReturnsTable = ({
             backgroundColor: theme.palette.text.third,
             color: "white",
             border: `${theme.palette.text.third} solid 1px`,
-            textDecoration: "none",
             marginTop: 2,
           }}
-        >
-          <PDFDownloadLink
-            document={<PDFDocument symbols={symbols} dataForPdf={dataForPdf} />}
-            fileName={pdfName}
-            style={{ color: "white", textDecoration: "none" }}
-          >
-            {({ loading }) =>
-              loading ? "Loading document..." : "Export To PDF"
+          onClick={() => {
+            if (isAuthenticated) {
+              handleSaveShortlist();
+            } else {
+              setOpenConversionFreeAccountDialog(true);
             }
-          </PDFDownloadLink>
+          }}
+        >
+          Save to shortlist
         </Button>
+        <br />
+        <Button
+          sx={{
+            backgroundColor: theme.palette.text.third,
+            color: "white",
+            border: `${theme.palette.text.third} solid 1px`,
+            textDecoration: "none",
+            marginTop: 2,
+            marginBottom: 5
+          }}
+          onClick={() => {
+            if (!isAuthenticated) {
+              setOpenConversionFreeAccountDialog(true);
+            }
+          }}
+        >
+          {isAuthenticated ? (
+            <PDFDownloadLink
+              document={
+                <PDFDocument symbols={symbols} dataForPdf={dataForPdf} />
+              }
+              fileName={pdfName}
+              style={{ color: "white", textDecoration: "none" }}
+            >
+              {({ loading }) =>
+                loading ? "Loading document..." : "Export To PDF"
+              }
+            </PDFDownloadLink>
+          ) : (
+            "Export To PDF"
+          )}
+        </Button>
+
+        <AddCategory
+          onClose={() => setOpenCategoryDialog(false)}
+          open={openCategoryDialog}
+          symbols={available_symbols}
+        />
+
+        <ConversionFreeAccount
+          open={openConversionFreeAccountDialog}
+          onClose={() => setOpenConversionFreeAccountDialog(false)}
+        />
       </div>
     </>
   );

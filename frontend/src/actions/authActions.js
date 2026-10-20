@@ -18,7 +18,6 @@ export const checkUser = (user) => async (dispatch) => {
       payload: { message: null },
     });
   } catch (err) {
-    console.log(err.response);
     if (err.response.data.message === undefined) {
       dispatch({
         type: REGISTER_ERROR,
@@ -109,4 +108,18 @@ export const logOut = (history) => (dispatch) => {
   });
 
   history("/login");
+};
+
+export const trackVisitor = (data) => async (dispatch) => {
+  try {
+    await axios.post(backendUrl + "/api/auth/trackVisitor", data);
+
+    console.log("unknow user has been tracked successfully!");
+  } catch (err) {
+    if (err.response.data.message === undefined) {
+      console.log("Server error");
+    } else {
+      console.log(err.response.data.message);
+    }
+  }
 };

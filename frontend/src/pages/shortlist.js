@@ -8,15 +8,18 @@ import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useAuth0 } from "@auth0/auth0-react";
 
-import { getCategory } from "../actions/stockAction";
 import {
-  setSelectedSymbolsForCalcuation,
+  setSelectedSymbolsForCalculation,
+  setSelectedSymbolsForPut,
   getStocks,
+  getCategory,
 } from "../actions/stockAction";
 
 import AddCategory from "../components/category/addCategory";
 import CustomAlert from "../components/customAlert";
 import EditCategory from "../components/category/editCategory";
+import SelectCallOrPut from "../components/dialog/selectCallOrPut";
+import UpgradeFreeAccount from "../components/dialog/upgradeFreeAccount";
 
 const Shortlist = () => {
   const theme = useTheme();
@@ -28,13 +31,36 @@ const Shortlist = () => {
   const [openAddCategory, setOpenAddCategory] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSymbol, setSelectedSymbol] = useState([]);
-  const [openMaxCategoriesCountAlert, setOpenMaxCategoriesCountAlert] =
-    useState(false);
+  const [openAlert, setOpenAlert] = useState(false);
+  const [alertText, setAlertText] = useState("");
+  const [openSelectCallorPut, setOpenSelectCallOrPut] = useState(false);
 
   const categories = useSelector((state) => state.stock.categories);
+  const subscriptionStatus = useSelector(
+    (state) => state.stripe.subscriptionStatus
+  );
+  const [openUpgradeFreeAccountDialog, setOpenUpgradeFreeAccountDialog] =
+    useState(false);
+  const [symbols, setSymbols] = useState([]);
   const isSmScreen = useMediaQuery("(min-width:600px)");
 
-  const onEdit = () => {
+  const onEdit = (index) => {
+    if (subscriptionStatus === "trial_expired" && index >= 2) {
+      // setAlertText(
+      //   <span>
+      //     Too many short lists for a free account. Please consider upgrading to
+      //     use up 10 shortlists.{" "}
+      //     <a href="/stripe" style={{ color: "white" }}>
+      //       {" "}
+      //       Upgrade now!{" "}
+      //     </a>
+      //   </span>
+      // );
+      // setOpenAlert(true);
+      setOpenUpgradeFreeAccountDialog(true);
+
+      return;
+    }
     setOpenEdit(true);
   };
 
@@ -47,12 +73,51 @@ const Shortlist = () => {
   };
 
   const onAddCategory = () => {
-    if (categories.length >= 10) {
-      setOpenMaxCategoriesCountAlert(true);
-      return;
+    if (subscriptionStatus === "trial_expired") {
+      if (categories.length >= 2) {
+        setOpenUpgradeFreeAccountDialog(true);
+
+        return;
+      }
+    } else {
+      if (categories.length >= 10) {
+        setAlertText("Each user can have ten categories at max!");
+        setOpenAlert(true);
+        return;
+      }
     }
 
     setOpenAddCategory(true);
+  };
+
+  const onCalculate = (category, index) => {
+    if (index >= 2 && subscriptionStatus === "trial_expired") {
+      setOpenUpgradeFreeAccountDialog(true);
+
+      return;
+    } else if (
+      category.symbols.length > 3 &&
+      subscriptionStatus === "trial_expired"
+    ) {
+      setOpenUpgradeFreeAccountDialog(true);
+      
+      return;
+    }
+
+    setOpenSelectCallOrPut(true);
+    setSymbols(category.symbols);
+  };
+
+  const onCallSelected = () => {
+    const data = { symbols: symbols };
+    dispatch(setSelectedSymbolsForCalculation(data));
+    navigate("/earn");
+  };
+
+  const onPutSelected = () => {
+    const data = { symbols: symbols };
+    dispatch(setSelectedSymbolsForPut(data));
+    navigate("/cashSecuredPuts");
   };
 
   useEffect(() => {
@@ -96,8 +161,8 @@ const Shortlist = () => {
                 }}
               >
                 <legend>{category.name}</legend>
-                {category.symbols.map((item, index) => (
-                  <Button key={index}>{item}</Button>
+                {category.symbols.map((item, index2) => (
+                  <Button key={index2}>{item}</Button>
                 ))}
                 <div style={{ display: "flex", width: "100%" }}>
                   <Button
@@ -108,9 +173,7 @@ const Shortlist = () => {
                     }}
                     disabled={category.symbols.length === 0}
                     onClick={() => {
-                      const data = { symbols: category.symbols };
-                      dispatch(setSelectedSymbolsForCalcuation(data));
-                      navigate("/earn");
+                      onCalculate(category, index);
                     }}
                   >
                     Calculate
@@ -119,7 +182,7 @@ const Shortlist = () => {
                     startIcon={<EditNoteIcon />}
                     sx={{ width: "22% !important", marginLeft: 1 }}
                     onClick={() => {
-                      onEdit();
+                      onEdit(index);
                       setSelectedCategory(category.name);
                       setSelectedSymbol(category.symbols);
                     }}
@@ -158,10 +221,25 @@ const Shortlist = () => {
         onClose={() => setOpenAddCategory(false)}
       />
       <CustomAlert
-        text="Each user can have ten categories at max!"
-        openState={openMaxCategoriesCountAlert}
+        text={alertText}
+        openState={openAlert}
         severity="warning"
-        onClose={() => setOpenMaxCategoriesCountAlert(false)}
+        autoHideDuration={5000}
+        onClose={() => setOpenAlert(false)}
+      />
+      <SelectCallOrPut
+        open={openSelectCallorPut}
+        text="Which side?"
+        onPut={onPutSelected}
+        onCall={onCallSelected}
+        onClose={() => setOpenSelectCallOrPut(false)}
+      />
+
+      <UpgradeFreeAccount
+        open={openUpgradeFreeAccountDialog}
+        onClose={() => {
+          setOpenUpgradeFreeAccountDialog(false);
+        }}
       />
     </div>
   );

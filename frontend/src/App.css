@@ -36,7 +36,7 @@ form {
 
 #payment-element {
   margin-bottom: 24px;
-  }
+}
 
 /* Buttons and links */
 #submit {
@@ -134,4 +134,53 @@ button:disabled {
     width: 80vw;
     min-width: initial;
   }
+}
+
+.sendfox-form {
+  border: 3px dashed #BFA76F;
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+  border-radius: 15px;
+  background-color: #0B1C2C;
+  font-family: Arial, sans-serif;
+}
+
+.sendfox-form p {
+  margin-bottom: 15px;
+}
+
+.sendfox-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #FFFFFF;
+}
+
+.sendfox-form input[type="text"],
+.sendfox-form input[type="email"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-family: Arial, sans-serif;
+}
+
+.sendfox-form button {
+  background-color: #BFA76F;
+  color: #fff;
+  border: 2px solid #BFA76F;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-family: Arial, sans-serif;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.sendfox-form button:hover {
+  background-color: #FFFFFF;
+  color: #BFA76F;
+  border: 2px solid #BFA76F;
+
 }

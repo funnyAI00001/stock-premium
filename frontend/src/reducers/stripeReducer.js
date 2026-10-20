@@ -3,6 +3,7 @@ import {
   GET_STRIPE_STATUS,
   GET_PAYMENT_INTENT,
   GET_CHECKOUT_SESSION_ID,
+  SET_CHECKOUT_SESSION_ID,
   SET_GETTING_CHECKOUT_SESSION,
 } from "../actions/types";
 
@@ -12,6 +13,7 @@ const initialState = {
   subscriptionStatus: null,
   checkoutSessionId: null,
   isGettingCheckoutSession: false,
+  userType: null,
 };
 
 const stripeReducer = (state = initialState, action) => {
@@ -39,12 +41,19 @@ const stripeReducer = (state = initialState, action) => {
         ...state,
         checkoutSessionId: action.payload.id,
         subscriptionStatus: action.payload.status,
+        userType: action.payload.userType,
       };
 
     case SET_GETTING_CHECKOUT_SESSION:
       return {
         ...state,
         isGettingCheckoutSession: action.payload.loading,
+      };
+
+    case SET_CHECKOUT_SESSION_ID:
+      return {
+        ...state,
+        checkoutSessionId: action.payload.checkoutSessionId,
       };
 
     default:

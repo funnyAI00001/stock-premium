@@ -14,7 +14,7 @@ import { addCategory } from "../../actions/stockAction";
 import LoadingOverlay from "../dialog/loadingOverlay";
 import CustomAlert from "../customAlert";
 
-const AddCategory = ({ open, onClose }) => {
+const AddCategory = ({ open, onClose, symbols = [] }) => {
   const [name, setName] = useState("");
   const dispatch = useDispatch();
   const { user } = useAuth0();
@@ -28,26 +28,21 @@ const AddCategory = ({ open, onClose }) => {
       return;
     }
     setSaving(true);
-    const result = await dispatch(addCategory({ user, name }));
+    dispatch(addCategory({ user, name, symbols }, saveCompleted));
+  };
+
+  const saveCompleted = (result) => {
+    setSaving(false);
 
     if (!result) {
-      setSaving(false);
-      setOpenSameCategoryAlert(true)
-      setTimeout(() => {
-        setOpenSameCategoryAlert(false)
-        onClose()
-      }, 2000);
-
-      return;
+      setOpenSameCategoryAlert(true);
+    } else {
+      setAdded(true);
     }
 
-    setSaving(false);
-    setAdded(true);
-
     setTimeout(() => {
-      setAdded(false);
       onClose();
-    }, 2000);
+    }, 4000);
   };
 
   return (
@@ -92,11 +87,15 @@ const AddCategory = ({ open, onClose }) => {
         openState={added}
         text="A new category has been created successfully!"
         severity="success"
+        autoHideDuration={2000}
+        onClose={() => setAdded(false)}
       />
       <CustomAlert
         openState={openSameCategoryAlert}
         text="The same category already exists!"
         severity="warning"
+        autoHideDuration={2000}
+        onClose={() => setOpenSameCategoryAlert(false)}
       />
     </Dialog>
   );

@@ -1,33 +1,12 @@
 import axios from "axios";
 import {
-  STRIPE_SUCCESS,
   GET_STRIPE_STATUS,
   GET_PAYMENT_INTENT,
   GET_CHECKOUT_SESSION_ID,
   SET_GETTING_CHECKOUT_SESSION,
+  SET_CHECKOUT_SESSION_ID,
 } from "./types";
 import { backendUrl } from "../config/url";
-
-export const handleToken =
-  (totalAmount, token, user, callback) => async (dispatch) => {
-    try {
-      axios
-        .post(backendUrl + "/api/stripe/pay", {
-          token: token.id,
-          amount: totalAmount,
-          user: user,
-        })
-        .then(async (res) => {
-          dispatch({
-            type: STRIPE_SUCCESS,
-          });
-
-          callback && callback();
-        });
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
 export const getStripeStatus = (user) => async (dispatch) => {
   try {
@@ -38,26 +17,6 @@ export const getStripeStatus = (user) => async (dispatch) => {
       .then(async (res) => {
         const { stripe } = res.data;
 
-        dispatch({
-          type: GET_STRIPE_STATUS,
-          payload: { stripe },
-        });
-      });
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-export const updateStripeStatus = (user) => async (dispatch) => {
-  try {
-    axios
-      .post(backendUrl + "/api/stripe/updateStripeStatus", {
-        user,
-      })
-      .then((res) => {
-        const { stripe } = res.data;
-
-        console.log("stripe after updateStripeStatus" + stripe);
         dispatch({
           type: GET_STRIPE_STATUS,
           payload: { stripe },
@@ -117,16 +76,17 @@ export const getCheckoutSessionId = (data) => async (dispatch) => {
     type: SET_GETTING_CHECKOUT_SESSION,
     payload: { loading: true },
   });
+
   try {
     const res = await axios.post(
       backendUrl + "/api/stripe/get-checkout-session-id",
       data
     );
-    const { id, status } = res.data;
+    const { id, status, userType } = res.data;
 
     dispatch({
       type: GET_CHECKOUT_SESSION_ID,
-      payload: { id, status },
+      payload: { id, status, userType },
     });
     dispatch({
       type: SET_GETTING_CHECKOUT_SESSION,
@@ -139,5 +99,33 @@ export const getCheckoutSessionId = (data) => async (dispatch) => {
       type: SET_GETTING_CHECKOUT_SESSION,
       payload: { loading: false },
     });
+  }
+};
+
+export const updateCheckoutSessionId = (data) => async (dispatch) => {
+  try {
+    const res = await axios.post(
+      backendUrl + "/api/stripe/update-checkout-session-id",
+      data
+    );
+
+    const { id } = res.data;
+
+    dispatch({
+      type: SET_CHECKOUT_SESSION_ID,
+      payload: { checkoutSessionId: id },
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const createFreeTrialAccount = (data) => async () => {
+  try {
+    await axios.post(backendUrl + "/api/stripe/createFreeTrialAccount", data);
+
+    window.location.href = "/earn";
+  } catch (error) {
+    console.error("Error creating free trial account: ", error);
   }
 };

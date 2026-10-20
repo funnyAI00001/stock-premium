@@ -7,6 +7,12 @@ require("dotenv").config();
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { v4: uuidv4 } = require("uuid");
+const adminEmails = [
+  "admin1@gmail.com",
+  "admin2@gmail.com",
+  "jason.p.nutter@gmail.com",
+  "email7@gmail.com",
+];
 
 router.post("/pay", async (req, res) => {
   const { token, amount, user } = req.body;
@@ -58,36 +64,36 @@ router.post("/pay", async (req, res) => {
     });
 });
 
-router.post("/updateStripeStatus", async (req, res) => {
-  const { user } = req.body;
-  const existingUser = await User.findOne({ email: user.email });
+// router.post("/updateStripeStatus", async (req, res) => {
+//   const { user } = req.body;
+//   const existingUser = await User.findOne({ email: user.email });
 
-  try {
-    if (existingUser) {
-      await User.findOneAndUpdate(
-        { email: user.email },
-        {
-          $set: {
-            stripe: true,
-          },
-        },
-        { new: true }
-      );
-    } else {
-      const newUser = new User({
-        email: user.email,
-        stripe: true,
-      });
+//   try {
+//     if (existingUser) {
+//       await User.findOneAndUpdate(
+//         { email: user.email },
+//         {
+//           $set: {
+//             stripe: true,
+//           },
+//         },
+//         { new: true }
+//       );
+//     } else {
+//       const newUser = new User({
+//         email: user.email,
+//         stripe: true,
+//       });
 
-      await newUser.save();
-    }
+//       await newUser.save();
+//     }
 
-    res.json({ stripe: true });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ message: error.message, stripe: false });
-  }
-});
+//     res.json({ stripe: true });
+//   } catch (error) {
+//     console.log(error.message);
+//     res.status(500).json({ message: error.message, stripe: false });
+//   }
+// });
 
 router.post("/getStripeStatus", async (req, res) => {
   const { user } = req.body;
@@ -147,7 +153,6 @@ router.post("/create-checkout-session", async (req, res) => {
     ],
     mode: "subscription",
     subscription_data: {
-
       trial_period_days: 14,
     },
     allow_promotion_codes: true,
@@ -156,27 +161,64 @@ router.post("/create-checkout-session", async (req, res) => {
   });
 
   // Update checkout session id of the user
-  const existingUser = await User.findOne({ email: user.email });
+  // const existingUser = await User.findOne({ email: user.email });
+  // const userType = adminEmails.includes(user.email) ? "Admin" : "Paid";
 
-  if (existingUser) {
-    await User.findOneAndUpdate(
-      { email: user.email },
-      {
-        $set: {
-          checkout_session_id: session.id,
-        },
-      }
-    );
-  } else {
-    const newUser = new User({
-      email: user.email,
-      checkout_session_id: session.id,
-    });
+  // if (existingUser) {
+  //   await User.findOneAndUpdate(
+  //     { email: user.email },
+  //     {
+  //       $set: {
+  //         checkout_session_id: session.id,
+  //         type: userType,
+  //       },
+  //     }
+  //   );
+  // } else {
+  //   const newUser = new User({
+  //     email: user.email,
+  //     checkout_session_id: session.id,
+  //     type: userType,
+  //   });
 
-    await newUser.save();
-  }
+  //   await newUser.save();
+  // }
   // res.redirect(303, session.url);
   res.status(200).json({ url: session.url });
+});
+
+router.post("/update-checkout-session-id", async (req, res) => {
+  const { user, checkoutSessionId } = req.body;
+
+  try {
+    // Update checkout session id of the user
+    const existingUser = await User.findOne({ email: user.email });
+    const userType = adminEmails.includes(user.email) ? "Admin" : "Paid";
+
+    if (existingUser) {
+      await User.findOneAndUpdate(
+        { email: user.email },
+        {
+          $set: {
+            checkout_session_id: checkoutSessionId,
+            type: userType,
+          },
+        }
+      );
+    } else {
+      const newUser = new User({
+        email: user.email,
+        checkout_session_id: checkoutSessionId,
+        type: userType,
+      });
+
+      await newUser.save();
+    }
+
+    res.status(200).json({ id: checkoutSessionId });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 router.post("/create-portal-session", async (req, res) => {
@@ -205,7 +247,29 @@ router.post("/create-portal-session", async (req, res) => {
   }
 });
 
-// Get session id of checkout session of the user
+router.post("/createFreeTrialAccount", async (req, res) => {
+  try {
+    const { user } = req.body;
+
+    const existingUser = await User.findOne({ email: user.email });
+
+    if (!existingUser) {
+      const newUser = new User({
+        email: user.email,
+        checkout_session_id: "trial",
+        type: adminEmails.includes(user.email) ? "Admin" : "Free",
+      });
+
+      await newUser.save();
+    }
+
+    res.status(200).json({ message: "success" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get session id of checkout session of the user, and data for the admin panel
 router.post("/get-checkout-session-id", async (req, res) => {
   try {
     const { user } = req.body;
@@ -215,25 +279,46 @@ router.post("/get-checkout-session-id", async (req, res) => {
       const sessionID = existingUser.checkout_session_id;
       let subscriptionStatus = null;
 
-      if (sessionID !== null) {
+      if (existingUser.type === "Admin") {
+        subscriptionStatus = "Admin";
+      } else if (sessionID !== null && sessionID !== "trial") {
         const checkoutSession = await stripe.checkout.sessions.retrieve(
           sessionID
         );
         subscriptionStatus = checkoutSession.status;
+      } else if (sessionID === "trial") {
+        created_at = existingUser.created_at;
+
+        const currentDate = new Date();
+
+        // Calculate the difference in milliseconds
+        const diffTime = Math.abs(currentDate - created_at);
+
+        // Convert milliseconds to days
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays >= 7) {
+          subscriptionStatus = "trial_expired";
+        } else {
+          subscriptionStatus = "trial";
+        }
       }
 
       res.status(200).json({
         id: sessionID,
         status: subscriptionStatus,
+        userType: existingUser.type,
       });
     } else {
       res.status(200).json({
         id: null,
         status: null,
+        userType: null,
       });
     }
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    console.log(error.message);
+    res.status(500).json({ message: "Server error: " + error.message });
   }
 });
 

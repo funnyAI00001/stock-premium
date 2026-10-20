@@ -11,26 +11,35 @@ import {
   InputLabel,
   Select,
   IconButton,
+  Checkbox,
+  FormGroup,
+  FormControlLabel,
 } from "@mui/material";
 import { useSelector, connect, useDispatch } from "react-redux";
+import { useLocation } from "react-router-dom";
 
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import moment from "moment";
-import Checkbox from "@mui/material/Checkbox";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
 
 import CoveredCallReturnsTable from "../components/stock/coveredCallReturnsTable";
 import LoadingOverlay from "../components/dialog/loadingOverlay";
 import CustomAlert from "../components/customAlert";
+import CustomAlert2 from "../components/customAlert2";
+import ConversionFreeAccount from "../components/dialog/conversionFreeAccount";
+import CalculationLimitDialog from "../components/dialog/calculationLimitDialog";
+import UpgradeFreeAccount from "../components/dialog/upgradeFreeAccount";
+
+import { useAuth0 } from "@auth0/auth0-react";
 
 import {
   getCoveredCallPremium,
   getExpirations,
   setOTMPercentages,
   getWeeklyExpiryDates,
+  getMarketStatus,
 } from "../actions/stockAction";
+import { increasePageClickCount } from "../actions/adminAction";
 
 const formatDate = (inputDate) => {
   // Split the input date string by "/"
@@ -68,7 +77,7 @@ const Calculate = ({
 }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
-  const [symbols, setSymbols] = useState([""]);
+  const location = useLocation();
   const [selectedButton, setSelectedButton] = useState("ATM");
   const [gotFirstResult, setGotFirstResult] = useState(false);
   const [firstCalculate, setFirstCalculate] = useState(false);
@@ -98,42 +107,48 @@ const Calculate = ({
   const [annualMaxRORs3, setAnnualMaxRORs3] = useState([]);
 
   const [openNoExpirationError, setOpenNoExpirationError] = useState(false);
-  const [openExpiryNotSelectedError, setOpenExpiryNotSelectedError] =
-    useState(false);
+  const [openExpiryNotSelectedError, setOpenExpiryNotSelectedError] = useState(false);
   const [openMaxSymbolCounts, setOpenMaxSymbolCounts] = useState(false);
-  const [openWarningForNoSupportSymbol, setOpenWarningForNoSupportSymbol] =
-    useState(false);
+  const [openWarningForNoSupportSymbol, setOpenWarningForNoSupportSymbol] = useState(false);
   const [openNoSymbolError, setOpenNoSymbolError] = useState(false);
+  const [openWarningForCalculationLimit, setOpenWarningForCalculationLimit] = useState(false);
+  const [openWarningMarketClosed, setOpenWarningMarketClosed] = useState(false);
 
   const service_error = useSelector((state) => state.stock.service_error);
   const server_error = useSelector((state) => state.stock.server_error);
-  const symbol_error = useSelector(
-    (state) => state.stock.symbol_not_found_error_message
-  );
-  const option_error = useSelector(
-    (state) => state.stock.options_not_found_error_message
-  );
-  const selectedSymbolsForCalculation = useSelector(
-    (state) => state.stock.selectedSymbolsForCalculation
-  );
+  const symbol_error = useSelector((state) => state.stock.symbol_not_found_error_message);
+  const option_error = useSelector((state) => state.stock.options_not_found_error_message);
+  const selectedSymbolsForCalculation = useSelector((state) => state.stock.selectedSymbolsForCalculation);
   const expirations = useSelector((state) => state.stock.expirations);
-  const available_symbols = useSelector(
-    (state) => state.stock.available_symbols
-  );
-  const weekly_expiry_dates = useSelector(
-    (state) => state.stock.weekly_expiry_dates
-  );
-  const availablePercentages = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 40, 50,
-  ];
+  const available_symbols = useSelector((state) => state.stock.available_symbols);
+  const weekly_expiry_dates = useSelector((state) => state.stock.weekly_expiry_dates);
+  const call_calculationLimit = useSelector((state) => state.stock.call_calculationLimit);
+  const availablePercentages = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 40, 50];
   const [expiration_date, setExpirationDate] = useState("");
   const [availableExpirations, setAvailableExpirations] = useState([]); // Monthly Expiry Dates
   const [otm1Percentage, setOtm1Percentage] = useState(5);
   const [otm2Percentage, setOtm2Percentage] = useState(10);
   const [weeklyOption, setWeeklyOption] = useState(false);
-  const [isGettingWeeklyExpiryDates, setIsGettingWeeklyExpiryDates] =
-    useState(false);
+  const [isGettingWeeklyExpiryDates, setIsGettingWeeklyExpiryDates] = useState(false);
   const [totalExpirations, setTotalExpirations] = useState([]);
+  const [btnText, setBtnText] = useState('Calculate')
+  const { isAuthenticated, isLoading, user } = useAuth0();
+  const subscriptionStatus = useSelector((state) => state.stripe.subscriptionStatus);
+  const userType = useSelector((state) => state.stripe.userType);
+  const marketStatus = useSelector((state) => state.stock.marketStatus);
+
+  const urlParams = new URLSearchParams(location.search);
+  let symbolParam = urlParams.get("symbol");
+
+  if (symbolParam === null) {
+    symbolParam = [""];
+  } else {
+    symbolParam = symbolParam.split(",");
+  }
+
+  const [symbols, setSymbols] = useState(symbolParam);
+  const [openConversionFreeAccountDialog, setOpenConversionFreeAccountDialog] = useState(false);
+  const [openUpgradeFreeAccountDialog, setOpenUpgradeFreeAccountDialog] = useState(false);
 
   useEffect(() => {
     if (ATMs.length > 0) {
@@ -145,14 +160,20 @@ const Calculate = ({
 
   // Initiate symbols with one received from shortlist
   useEffect(() => {
+    // If the user directly goes to 'earn' page, initiate symbols as one empty field
+    if (selectedSymbolsForCalculation.length === 0) {
+      return;
+    }
+
     setSymbols(selectedSymbolsForCalculation);
     setGotFirstResult(false);
-
-    // If the user directly goes to earn page, initiate symbols with one empty field
-    if (selectedSymbolsForCalculation.length === 0) {
-      setSymbols([""]);
-    }
   }, [selectedSymbolsForCalculation]);
+
+  useEffect(() => {
+    if (marketStatus === "closed") {
+      setOpenWarningMarketClosed(true);
+    }
+  }, [marketStatus]);
 
   useEffect(() => {
     if (expirations.length > 0) {
@@ -169,7 +190,7 @@ const Calculate = ({
           dates.push(item);
         }
 
-        if (difference < minDifference && difference > 0) {
+        if (difference < minDifference && difference > 8) {
           minDifference = difference;
           minDate = item;
         }
@@ -192,11 +213,7 @@ const Calculate = ({
 
     // For ATM
     returns = strikeATMs.map((item, index) => {
-      return (
-        item * 100 -
-        sharePrices[index] * 100 +
-        parseFloat(ATMs[index])
-      ).toFixed(0);
+      return (item * 100 - sharePrices[index] * 100 + parseFloat(ATMs[index])).toFixed(0);
     });
 
     risks = sharePrices.map((item, index) => {
@@ -211,10 +228,7 @@ const Calculate = ({
     daysToExpirationDate = getDaysToExpirationDate();
 
     annualMaxRORs = RORs.map((item) => {
-      return (
-        (Math.pow(1 + item / 100, 365 / daysToExpirationDate) - 1) *
-        100
-      ).toFixed(2);
+      return ((Math.pow(1 + item / 100, 365 / daysToExpirationDate) - 1) * 100).toFixed(2);
     });
 
     setMaxReturns1(returns);
@@ -229,11 +243,7 @@ const Calculate = ({
 
     // For ATM5
     returns = strikeOTM5s.map((item, index) => {
-      return (
-        item * 100 -
-        sharePrices[index] * 100 +
-        parseFloat(OTM5s[index])
-      ).toFixed(0);
+      return (item * 100 - sharePrices[index] * 100 + parseFloat(OTM5s[index])).toFixed(0);
     });
 
     risks = sharePrices.map((item, index) => {
@@ -248,10 +258,7 @@ const Calculate = ({
     daysToExpirationDate = getDaysToExpirationDate();
 
     annualMaxRORs = RORs.map((item) => {
-      return (
-        (Math.pow(1 + item / 100, 365 / daysToExpirationDate) - 1) *
-        100
-      ).toFixed(2);
+      return ((Math.pow(1 + item / 100, 365 / daysToExpirationDate) - 1) * 100).toFixed(2);
     });
 
     setMaxReturns2(returns);
@@ -261,11 +268,7 @@ const Calculate = ({
 
     // For ATM10
     returns = strikeOTM10s.map((item, index) => {
-      return (
-        item * 100 -
-        sharePrices[index] * 100 +
-        parseFloat(OTM10s[index])
-      ).toFixed(0);
+      return (item * 100 - sharePrices[index] * 100 + parseFloat(OTM10s[index])).toFixed(0);
     });
 
     risks = sharePrices.map((item, index) => {
@@ -280,10 +283,7 @@ const Calculate = ({
     daysToExpirationDate = getDaysToExpirationDate();
 
     annualMaxRORs = RORs.map((item) => {
-      return (
-        (Math.pow(1 + item / 100, 365 / daysToExpirationDate) - 1) *
-        100
-      ).toFixed(2);
+      return ((Math.pow(1 + item / 100, 365 / daysToExpirationDate) - 1) * 100).toFixed(2);
     });
 
     setMaxReturns3(returns);
@@ -299,9 +299,7 @@ const Calculate = ({
     if (weeklyOption) {
       total = [
         ...total,
-        ...weekly_expiry_dates.filter(
-          (item) => !availableExpirations.some((one) => one.date === item)
-        ),
+        ...weekly_expiry_dates.filter((item) => !availableExpirations.some((one) => one.date === item)),
       ];
     }
 
@@ -313,6 +311,38 @@ const Calculate = ({
     setTotalExpirations(sortedDates);
   }, [weeklyOption, availableExpirations, weekly_expiry_dates]);
 
+  useEffect(() => {
+    dispatch(getExpirations());
+    dispatch(getMarketStatus());
+  }, [dispatch]);
+
+  useEffect(() => {
+    // increase page click count
+    if (!isLoading) {
+      dispatch(
+        increasePageClickCount({
+          page: "Calls",
+          userType: userType === null ? "Unknown" : userType,
+        })
+      );
+    }
+  }, [dispatch, userType, isLoading]);
+
+  useEffect(() => {
+    if (call_calculationLimit && !isAuthenticated) {
+      // For unknown users who are not logged in
+      setOpenWarningForCalculationLimit(true);
+
+      return;
+    } else if (call_calculationLimit && isAuthenticated && subscriptionStatus === "trial_expired") {
+      // For free users whose free trial was expired
+
+      setOpenUpgradeFreeAccountDialog(true);
+      return;
+    }
+    
+  }, [isAuthenticated, call_calculationLimit]);
+
   const handleSymbolChange = (e, index) => {
     const input = e.target.value.toUpperCase(); // Convert input text to uppercase
     const onlyUppercase = input.replace(/[^A-Z]/g, ""); // Remove any characters that are not uppercase letters
@@ -323,15 +353,29 @@ const Calculate = ({
 
   // When 'calculate' button is clicked
   const handleCalculate = () => {
-    // If expiry date isn't seleced
-    if (expiration_date === null || expiration_date === "") {
-      setOpenExpiryNotSelectedError(true);
+    console.log(call_calculationLimit);
+    
+    if (call_calculationLimit && !isAuthenticated) {
+      // For unknown users who are not logged in
+      setOpenWarningForCalculationLimit(true);
+      setBtnText('Upgrade Now')
+
+      return;
+    } else if (call_calculationLimit && isAuthenticated && subscriptionStatus === "trial_expired") {
+      // For free users whose free trial was expired
+      setOpenUpgradeFreeAccountDialog(true);
+      setBtnText('Upgrade Now')
+
       return;
     }
 
-    dispatch(
-      setOTMPercentages({ percentages: [otm1Percentage, otm2Percentage] })
-    );
+    if (expiration_date === null || expiration_date === "") {
+      setOpenExpiryNotSelectedError(true);
+
+      return;
+    }
+
+    dispatch(setOTMPercentages({ percentages: [otm1Percentage, otm2Percentage] }));
 
     const filteredSymbols = symbols.filter((item) => item !== "");
 
@@ -355,6 +399,10 @@ const Calculate = ({
       isEarn: false,
       otm1Percentage,
       otm2Percentage,
+      isAuthenticated,
+      subscriptionStatus,
+      userType: userType ? userType : "Unknown",
+      email: isAuthenticated ? user.email : "Unknown",
     };
 
     setFirstCalculate(true);
@@ -427,11 +475,18 @@ const Calculate = ({
   // This is called when the calculation is successful!
   const firstCalculateSuccess = () => {
     setFirstCalculate(false);
+    // setOpenWarningMarketClosed(true);
     setOpenWarningForNoSupportSymbol(true);
   };
 
   // Add symbol
   const addField = () => {
+    if (!isAuthenticated && symbols.length >= 3) {
+      setOpenConversionFreeAccountDialog(true);
+
+      return;
+    }
+
     if (symbols.length >= 10) {
       setOpenMaxSymbolCounts(true);
       return;
@@ -449,26 +504,46 @@ const Calculate = ({
 
   // Weekly option select/disselect
   const handleWeeklyOption = (event) => {
-    setWeeklyOption(event.target.checked);
-    setOpenWarningForNoSupportSymbol(false);
-
-    if (event.target.checked) {
+    if (!isAuthenticated) {
+      setOpenConversionFreeAccountDialog(true);
+    } else if (isAuthenticated && subscriptionStatus === "trial_expired") {
+      setOpenUpgradeFreeAccountDialog(true);
+    } else if (isAuthenticated && subscriptionStatus !== "trial_expired") {
       const filteredSymbols = symbols.filter((item) => item !== "");
-      setSymbols(filteredSymbols);
-      setIsGettingWeeklyExpiryDates(true);
 
-      dispatch(
-        getWeeklyExpiryDates(
-          { symbols: filteredSymbols },
-          handleEndGettingWeeklyOption
-        )
-      );
+      if (filteredSymbols.length === 0) {
+        setOpenNoSymbolError(true);
+
+        return;
+      }
+
+      setWeeklyOption(event.target.checked);
+      setOpenWarningForNoSupportSymbol(false);
+
+      if (event.target.checked) {
+        setSymbols(filteredSymbols);
+        setIsGettingWeeklyExpiryDates(true);
+
+        dispatch(getWeeklyExpiryDates({ symbols: filteredSymbols }, handleEndGettingWeeklyOption));
+      }
     }
   };
 
   const handleEndGettingWeeklyOption = () => {
     setIsGettingWeeklyExpiryDates(false);
   };
+
+  const handleOTMPercentageClick = () => {
+    if (!isAuthenticated) {
+      setOpenConversionFreeAccountDialog(true);
+    } else if (isAuthenticated && subscriptionStatus === "trial_expired") {
+      setOpenUpgradeFreeAccountDialog(true);
+    }
+  };
+
+  if (isLoading) {
+    return <LoadingOverlay text="Loading..." color="success" />;
+  }
 
   return (
     <div
@@ -480,14 +555,11 @@ const Calculate = ({
     >
       {/* Section 1 */}
       <section>
-        <Typography
-          variant="h3"
-          color="text.third"
-          textAlign="center"
-          mx={2}
-          mt={3}
-        >
-          Stock Market Profit Accelerator
+        <Typography variant="h3" color="text.third" textAlign="center" mx={2} mt={3}>
+          Covered Calls
+        </Typography>
+        <Typography variant="h6" textAlign="center" color="white" mt={3}>
+          Enter your tickers to compare premiums for your covered call strategy.
         </Typography>
         <fieldset
           style={{
@@ -518,12 +590,7 @@ const Calculate = ({
                     {"."}
                   </Typography>
                 </Grid>
-                <Grid
-                  item
-                  xs={8}
-                  sm={6}
-                  sx={{ "& .MuiInputBase-input": { color: "black" } }}
-                >
+                <Grid item xs={8} sm={6} sx={{ "& .MuiInputBase-input": { color: "black" } }}>
                   <TextField
                     key={index}
                     value={symbol}
@@ -542,12 +609,7 @@ const Calculate = ({
                     style={{ color: "black !important" }}
                   />
                 </Grid>
-                <Grid
-                  item
-                  xs={2}
-                  sm={3}
-                  sx={{ paddingRight: { xs: 0, md: 3 } }}
-                >
+                <Grid item xs={2} sm={3} sx={{ paddingRight: { xs: 0, md: 3 } }}>
                   {index !== 0 && (
                     <IconButton
                       aria-label="delete"
@@ -562,12 +624,7 @@ const Calculate = ({
               </Grid>
             ))}
             <div>
-              <IconButton
-                aria-label="add"
-                onClick={addField}
-                size="large"
-                style={{ marginY: 2 }}
-              >
+              <IconButton aria-label="add" onClick={addField} size="large" style={{ marginY: 2 }}>
                 <AddCircleIcon />
               </IconButton>
             </div>
@@ -577,7 +634,9 @@ const Calculate = ({
                   control={
                     <Checkbox
                       checked={weeklyOption}
-                      onChange={(e) => handleWeeklyOption(e)}
+                      onChange={(e) => {
+                        handleWeeklyOption(e);
+                      }}
                       inputProps={{ "aria-label": "controlled" }}
                     />
                   }
@@ -595,11 +654,7 @@ const Calculate = ({
                 onChange={(event) => setExpirationDate(event.target.value)}
               >
                 {totalExpirations.map((item, index) => {
-                  if (
-                    availableExpirations.some(
-                      (expItem) => expItem.date === item
-                    )
-                  ) {
+                  if (availableExpirations.some((expItem) => expItem.date === item)) {
                     return (
                       <MenuItem value={item} key={index}>
                         {item + " (M)"}
@@ -627,6 +682,10 @@ const Calculate = ({
                     setOtm1Percentage(event.target.value);
                     setGotFirstResult(false);
                   }}
+                  onClick={() => {
+                    handleOTMPercentageClick();
+                  }}
+                  disabled={!isAuthenticated || subscriptionStatus === "trial_expired"}
                 >
                   {availablePercentages.map((item, index) => (
                     <MenuItem value={item} key={index}>
@@ -642,6 +701,10 @@ const Calculate = ({
                   id="otm2"
                   label="OTM 2(%)"
                   value={otm2Percentage}
+                  disabled={!isAuthenticated || subscriptionStatus === "trial_expired"}
+                  onClick={() => {
+                    handleOTMPercentageClick();
+                  }}
                   onChange={(event) => {
                     setOtm2Percentage(event.target.value);
                     setGotFirstResult(false);
@@ -662,14 +725,15 @@ const Calculate = ({
           <Button
             sx={{
               margin: "auto",
-              marginY: 2,
+              marginTop: 2,
+              marginBottom: 8,
               background: `${theme.palette.text.third}`,
               border: `${theme.palette.text.third} solid 1px`,
               color: "white",
             }}
             onClick={handleCalculate}
           >
-            Calculate
+            {btnText}
           </Button>
         </Box>
       </section>
@@ -717,13 +781,7 @@ const Calculate = ({
       {/* Section 3 */}
       {gotFirstResult && (
         <section>
-          <Typography
-            variant="h4"
-            color="text.third"
-            textAlign="center"
-            mt={5}
-            mb={4}
-          >
+          <Typography variant="h4" color="text.third" textAlign="center" mt={5} mb={4}>
             Covered Call Premiums and % Returns
           </Typography>
           <Box
@@ -745,28 +803,33 @@ const Calculate = ({
             }}
             gap={2}
           >
-            <Button
-              className={selectedButton === "ATM" ? "selected" : ""}
-              onClick={() => handleButtonClick("ATM")}
-            >
+            <Button className={selectedButton === "ATM" ? "selected" : ""} onClick={() => handleButtonClick("ATM")}>
               ATM
             </Button>
             <Button
-              className={
-                selectedButton === otm1Percentage + "%OTM" ? "selected" : ""
-              }
+              className={selectedButton === otm1Percentage + "%OTM" ? "selected" : ""}
               onClick={() => handleButtonClick(otm1Percentage + "%OTM")}
             >
               {otm1Percentage}% <br /> OTM
             </Button>
             <Button
-              className={
-                selectedButton === otm2Percentage + "%OTM" ? "selected" : ""
-              }
+              className={selectedButton === otm2Percentage + "%OTM" ? "selected" : ""}
               onClick={() => handleButtonClick(otm2Percentage + "%OTM")}
             >
               {otm2Percentage}% <br /> OTM
             </Button>
+          </Box>
+          <Box display="flex" justifyContent="center">
+            <CustomAlert2
+              openState={openWarningMarketClosed}
+              severity="warning"
+              text="Options premium data may have errors outside of trading hours of major US exchanges. If you see $0 premium value, 
+            try again once markets open. We are working with our data provider to resolve this issue."
+              autoHideDuration={null}
+              onClose={() => {
+                setOpenWarningMarketClosed(false);
+              }}
+            />
           </Box>
           <CoveredCallReturnsTable
             symbols={symbols}
@@ -817,28 +880,16 @@ const Calculate = ({
       )}
 
       {/* Show a progress bar while main calcuation is being performed */}
-      {firstCalculate && (
-        <LoadingOverlay text="Calculating..." color="success" />
-      )}
+      {firstCalculate && <LoadingOverlay text="Calculating..." color="success" />}
 
       {/* Show a progress bar while getting weekly expiry dates */}
-      {isGettingWeeklyExpiryDates && (
-        <LoadingOverlay text="Getting Weekly Expiries..." color="success" />
-      )}
+      {isGettingWeeklyExpiryDates && <LoadingOverlay text="Getting Weekly Expiries..." color="success" />}
 
       {/* Symbol not found error */}
-      <CustomAlert
-        openState={symbol_error}
-        severity="warning"
-        text="Ticker entered does not exist!"
-      />
+      <CustomAlert openState={symbol_error} severity="warning" text="Ticker entered does not exist!" />
 
       {/* Option not found error */}
-      <CustomAlert
-        openState={option_error}
-        severity="warning"
-        text="No options available for ticker!"
-      />
+      <CustomAlert openState={option_error} severity="warning" text="No options available for ticker!" />
 
       {/* Service not available error */}
       <CustomAlert
@@ -848,11 +899,7 @@ const Calculate = ({
       />
 
       {/* Server error */}
-      <CustomAlert
-        openState={server_error}
-        severity="warning"
-        text="Server Error"
-      />
+      <CustomAlert openState={server_error} severity="warning" text="Server Error" />
 
       {/* Expiry dates not found error */}
       <CustomAlert
@@ -896,14 +943,31 @@ const Calculate = ({
           setOpenNoSymbolError(false);
         }}
       />
+
+      <CalculationLimitDialog
+        open={openWarningForCalculationLimit}
+        onClose={() => setOpenWarningForCalculationLimit(false)}
+      />
+
+      <ConversionFreeAccount
+        open={openConversionFreeAccountDialog}
+        onClose={() => {
+          setOpenConversionFreeAccountDialog(false);
+        }}
+      />
+
+      <UpgradeFreeAccount
+        open={openUpgradeFreeAccountDialog}
+        onClose={() => {
+          setOpenUpgradeFreeAccountDialog(false);
+        }}
+      />
     </div>
   );
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  getCoveredCallPremium: (data, callback) =>
-    dispatch(getCoveredCallPremium(data, callback)),
-  getExpirations: () => dispatch(getExpirations()),
+  getCoveredCallPremium: (data, callback) => dispatch(getCoveredCallPremium(data, callback)),
 });
 
 const mapStateToProps = (state) => ({

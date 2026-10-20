@@ -1,14 +1,3 @@
-const imageUrlFromPlayerName = (name) => {
-  if (name === "Juan Manuel Cerundolo") {
-    return "/images/players/Juan-Manuel_Cerundolo.jpg";
-  } else if (name === "Santiago_Gonzalez") {
-    return "/images/players/Santiago_Gonzalez.jpg";
-  } else {
-    const lastname = name.split(" ");
-    return "/images/players/" + lastname[lastname.length - 1] + ".jpg";
-  }
-};
-export default imageUrlFromPlayerName;
 
 export const getInitials = (name = "") =>
   name

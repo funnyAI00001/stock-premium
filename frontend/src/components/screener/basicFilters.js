@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Grid,
   Typography,
@@ -8,21 +8,24 @@ import {
   Select,
   MenuItem,
   TextField,
-  ListItemText,
   Box,
   Button,
   Stack,
   Autocomplete,
+  Checkbox,
 } from "@mui/material";
-import Checkbox from "@mui/material/Checkbox";
 
 import { useTheme } from "@emotion/react";
 import { useDispatch, useSelector } from "react-redux";
 
 import CustomAlert from "../customAlert";
 import LoadingOverlay from "../dialog/loadingOverlay";
+import CalculationLimitDialog from "../dialog/calculationLimitDialog";
+import ConversionFreeAccount from "../dialog/conversionFreeAccount";
+import UpgradeFreeAccount from "../dialog/upgradeFreeAccount";
 
-import { getBasicResult } from "../../actions/stockAction";
+import { getBasicResult, getStocks } from "../../actions/stockAction";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const BasicFilters = () => {
   const isSmScreen = useMediaQuery("(min-width:600px)");
@@ -46,34 +49,29 @@ const BasicFilters = () => {
   const [minPB, setMinPB] = useState(-100000);
   const [maxPB, setMaxPB] = useState(10000000);
   const [selectedSymbols, setSelectedSymbols] = useState([]);
-  // const [selectedSectors, setSelectedSectors] = useState([]);
+  const [openWarningForCalculationLimit, setOpenWarningForCalculationLimit] =
+    useState(false);
+  const [openConversionFreeAccountDialog, setOpenConversionFreeAccountDialog] =
+    useState(false);
 
-  // const sectors = [
-  //   "Energy & Utilities",
-  //   "Financial Services",
-  //   "Healthcare & Pharmaceuticals",
-  //   "Technology & Electronics",
-  //   "Industrial & Manufacturing",
-  //   "Consumer Goods & Services",
-  //   "Food & Beverage",
-  //   "Transportation & Logistics",
-  //   "Real Estate & Construction",
-  //   "Media, Entertainment & Recreation",
-  //   "Telecommunications",
-  //   "Materials & Chemicals",
-  //   "Retail & Wholesale",
-  //   "Automotive & Aerospace",
-  //   "Insurance",
-  // ];
   const betas = ["Low", "Mid", "High"];
-  const [openWarningForNoSector, setOpenWarningForNoSector] = useState(false);
   const [openWarningForNoSymbol, setOpenWarningForNoSymbol] = useState(false);
   const [openWarningForNoBeta, setOpenWarningForNoBeta] = useState(false);
   const [openWarningForPE, setOpenWarningForPE] = useState(false);
   const [openWarningForPB, setOpenWarningForPB] = useState(false);
   const [isGettingBasicResult, setIsGettingBasicResult] = useState(false);
-  const stocks = useSelector((state) => state.stock.stocks);
   const [selectedIndustries, setSelectedIndustries] = useState([]);
+  const [openUpgradeFreeAccountDialog, setOpenUpgradeFreeAccountDialog] =
+    useState(false);
+  const { isAuthenticated, user } = useAuth0();
+  const stocks = useSelector((state) => state.stock.stocks);
+  const subscriptionStatus = useSelector(
+    (state) => state.stripe.subscriptionStatus
+  );
+  const userType = useSelector((state) => state.stripe.userType);
+  const screener_calculationLimit = useSelector(
+    (state) => state.stock.screener_calculationLimit
+  );
 
   const handleBetaChange = (event, beta) => {
     if (event.target.checked) {
@@ -84,11 +82,20 @@ const BasicFilters = () => {
   };
 
   const onGetBasicResult = async () => {
-    // if (selectedSectors.length === 0) {
-    //   setOpenWarningForNoSector(true);
+    if (screener_calculationLimit && !isAuthenticated) {
+      setOpenWarningForCalculationLimit(true);
 
-    //   return;
-    // }
+      return;
+    } else if (
+      screener_calculationLimit &&
+      isAuthenticated &&
+      subscriptionStatus === "trial_expired"
+    ) {
+      setOpenUpgradeFreeAccountDialog(true);
+
+      return;
+    }
+
     if (selectedIndustries.length === 0) {
       setOpenWarningForNoSymbol(true);
 
@@ -118,7 +125,6 @@ const BasicFilters = () => {
     dispatch(
       getBasicResult(
         {
-          // sectors: selectedSectors,
           industries: selectedIndustries,
           betas: selectedBetas,
           minMarketCap: minMarketCap,
@@ -131,68 +137,45 @@ const BasicFilters = () => {
           maxDivYield: maxDivYield,
           minPB: minPB,
           maxPB: maxPB,
+          isAuthenticated,
+          subscriptionStatus,
+          symbols: selectedSymbols.map((item) => item.symbol),
+          userType: userType ? userType : "Unknown",
+          email: isAuthenticated ? user.email : "Unknown",
         },
         onEndGetBasicResult
       )
     );
-
   };
 
   const onEndGetBasicResult = () => {
     setIsGettingBasicResult(false);
   };
 
+  useEffect(() => {
+    dispatch(getStocks());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (screener_calculationLimit && !isAuthenticated) {
+      setOpenWarningForCalculationLimit(true);
+
+      return;
+    } else if (
+      screener_calculationLimit &&
+      isAuthenticated &&
+      subscriptionStatus === "trial_expired"
+    ) {
+      setOpenUpgradeFreeAccountDialog(true);
+
+      return;
+    }
+  }, [isAuthenticated, screener_calculationLimit]);
+
   return (
     <Box>
       <fieldset style={fieldsetStyle}>
         <legend>Lookalike Stock Finder</legend>
-        {/* <Grid container spacing={0} alignItems="center">
-          <Grid item xs={2} sm={4}>
-            <Typography
-              color="white"
-              variant="body1"
-              sx={{ fontSize: isSmScreen ? 18 : 14 }}
-            >
-              Sector
-            </Typography>
-          </Grid>
-          <Grid item xs={10} sm={8} display="flex" justifyContent="center">
-            <FormControl
-              sx={{
-                m: 1,
-                margin: 0,
-                width: "100%",
-                "& .MuiSelect-select": { borderColor: "white" },
-              }}
-            >
-              <InputLabel id="sector">Sector</InputLabel>
-              <Select
-                multiple
-                labelId="sector"
-                id="sector"
-                value={selectedSectors}
-                label="Sector"
-                renderValue={(selected) => selected.length + " Selected"}
-                onChange={(event) => {
-                  const {
-                    target: { value },
-                  } = event;
-                  setSelectedSectors(
-                    // On autofill we get a stringified value.
-                    typeof value === "string" ? value.split(",") : value
-                  );
-                }}
-              >
-                {sectors.map((sector, index) => (
-                  <MenuItem key={index} value={sector}>
-                    <Checkbox checked={selectedSectors.indexOf(sector) > -1} />
-                    <ListItemText primary={sector} />
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid> */}
         <Grid container spacing={1} alignItems="center">
           <Grid item xs={2} sm={4}>
             <Typography
@@ -213,6 +196,12 @@ const BasicFilters = () => {
                 filterSelectedOptions
                 value={selectedSymbols}
                 onChange={(event, newValue) => {
+                  if (!isAuthenticated && newValue.length > 3) {
+                    setOpenConversionFreeAccountDialog(true);
+
+                    return;
+                  }
+
                   setSelectedSymbols(newValue);
                   const industries = newValue.map((item) => item.industry);
                   const uniqueIndustries = industries.filter(
@@ -230,6 +219,11 @@ const BasicFilters = () => {
                     placeholder="Symbols"
                   />
                 )}
+                sx={{
+                  "& .MuiAutocomplete-inputRoot": {
+                    paddingRight: "0px !important",
+                  },
+                }}
               />
             </Stack>
           </Grid>
@@ -591,15 +585,6 @@ const BasicFilters = () => {
       </Box>
 
       <CustomAlert
-        openState={openWarningForNoSector}
-        severity="warning"
-        text="Please select at least one sector!"
-        autoHideDuration={6000}
-        onClose={() => {
-          setOpenWarningForNoSector(false);
-        }}
-      />
-      <CustomAlert
         openState={openWarningForNoSymbol}
         severity="warning"
         text="Please select at least one symbol!"
@@ -639,6 +624,23 @@ const BasicFilters = () => {
       {isGettingBasicResult && (
         <LoadingOverlay text="Filtering..." color="success" />
       )}
+
+      <CalculationLimitDialog
+        open={openWarningForCalculationLimit}
+        onClose={() => setOpenWarningForCalculationLimit(false)}
+      />
+
+      <ConversionFreeAccount
+        open={openConversionFreeAccountDialog}
+        onClose={() => setOpenConversionFreeAccountDialog(false)}
+      />
+
+      <UpgradeFreeAccount
+        open={openUpgradeFreeAccountDialog}
+        onClose={() => {
+          setOpenUpgradeFreeAccountDialog(false);
+        }}
+      />
     </Box>
   );
 };

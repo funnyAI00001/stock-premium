@@ -1,7 +1,16 @@
 import React from "react";
 import { Typography, Box } from "@mui/material";
+import { useAuth0 } from "@auth0/auth0-react";
+
+import LoadingOverlay from "../components/dialog/loadingOverlay";
 
 const ContactUs = () => {
+  const { isLoading } = useAuth0();
+
+  if (isLoading) {
+    return <LoadingOverlay text="Loading..." color="success" />;
+  }
+
   return (
     <Box
       padding={5}

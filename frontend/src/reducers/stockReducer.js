@@ -20,6 +20,12 @@ import {
   SET_OTM_ITM_PERCENTAGES,
   SET_FOUND_STOCK,
   SET_FOUND_OPTION,
+  SET_SIDE,
+  SET_CALL_CALCULATIONLIMIT,
+  SET_PUT_CALCULATIONLIMIT,
+  SET_SCREENER_CALCULATIONLIMIT,
+  SET_SELECTED_SYMBOLS_FOR_PUT,
+  GET_MARKET_STATUS,
 } from "../actions/types";
 
 const initialState = {
@@ -44,6 +50,7 @@ const initialState = {
   server_error: false,
   categories: [],
   selectedSymbolsForCalculation: [],
+  selectedSymbolsForPut: [],
   OTM1percentage: 5,
   OTM2percentage: 10,
   weekly_expiry_dates: [],
@@ -61,7 +68,12 @@ const initialState = {
   OTMpercentage: 5,
   ITMpercentage: 5,
   bFoundStock: false,
-  bFoundOptions: false,
+  bFoundOption: false,
+  side: "Calls",
+  call_calculationLimit: false,
+  put_calculationLimit: false,
+  screener_calculationLimit: false,
+  marketStatus: "open",
 };
 
 const stockReducer = (state = initialState, action) => {
@@ -156,6 +168,12 @@ const stockReducer = (state = initialState, action) => {
       return {
         ...state,
         selectedSymbolsForCalculation: action.payload.symbols,
+      };
+
+    case SET_SELECTED_SYMBOLS_FOR_PUT:
+      return {
+        ...state,
+        selectedSymbolsForPut: action.payload.symbols,
       };
 
     case SET_OTM_PERCENTAGES:
@@ -260,6 +278,36 @@ const stockReducer = (state = initialState, action) => {
       return {
         ...state,
         bFoundOption: true,
+      };
+
+    case SET_SIDE:
+      return {
+        ...state,
+        side: action.payload.side,
+      };
+
+    case SET_CALL_CALCULATIONLIMIT:
+      return {
+        ...state,
+        call_calculationLimit: action.payload.value,
+      };
+
+    case SET_PUT_CALCULATIONLIMIT:
+      return {
+        ...state,
+        put_calculationLimit: action.payload.value,
+      };
+
+    case SET_SCREENER_CALCULATIONLIMIT:
+      return {
+        ...state,
+        screener_calculationLimit: action.payload.value,
+      };
+
+    case GET_MARKET_STATUS:
+      return {
+        ...state,
+        marketStatus: action.payload.marketStatus,
       };
 
     default:

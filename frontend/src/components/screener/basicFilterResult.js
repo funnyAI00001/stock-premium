@@ -8,8 +8,8 @@ import {
   TableRow,
   TableCell,
   Box,
+  Checkbox
 } from "@mui/material";
-import Checkbox from "@mui/material/Checkbox";
 
 import { useSelector, useDispatch } from "react-redux";
 

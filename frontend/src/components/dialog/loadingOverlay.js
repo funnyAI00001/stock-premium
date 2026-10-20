@@ -1,6 +1,5 @@
 import React from "react";
-import { CircularProgress } from "@mui/material";
-import { Dialog, DialogContent } from "@mui/material";
+import { Dialog, DialogContent, CircularProgress } from "@mui/material";
 
 export default function LoadingOverlay({ text, color }) {
   return (

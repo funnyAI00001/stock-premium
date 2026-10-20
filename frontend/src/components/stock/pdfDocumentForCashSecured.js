@@ -47,15 +47,12 @@ const PDFDocumentForCashS = ({ symbols, dataForPdf }) => {
   const expiration_date = dataForPdf.expiration_date;
   const otmPercentage = dataForPdf.otmPercentage;
   const itmPercentage = dataForPdf.itmPercentage;
-  const maxReturns1 = dataForPdf.maxReturns1;
   const maxRisks1 = dataForPdf.maxRisks1;
   const maxRORs1 = dataForPdf.maxRORs1;
   const annualMaxRORs1 = dataForPdf.annualMaxRORs1;
-  const maxReturns2 = dataForPdf.maxReturns2;
   const maxRisks2 = dataForPdf.maxRisks2;
   const maxRORs2 = dataForPdf.maxRORs2;
   const annualMaxRORs2 = dataForPdf.annualMaxRORs2;
-  const maxReturns3 = dataForPdf.maxReturns3;
   const maxRisks3 = dataForPdf.maxRisks3;
   const maxRORs3 = dataForPdf.maxRORs3;
   const annualMaxRORs3 = dataForPdf.annualMaxRORs3;

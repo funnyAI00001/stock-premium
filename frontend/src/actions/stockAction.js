@@ -8,6 +8,7 @@ import {
   SERVER_ERROR,
   GET_CATEGORY,
   SET_SELECTED_SYMBOLS_FOR_CALCULATION,
+  SET_SELECTED_SYMBOLS_FOR_PUT,
   SET_OTM_PERCENTAGES,
   SET_WEEKLY_EXPIRY_DATES,
   GET_SYMBOLLISTS,
@@ -19,14 +20,21 @@ import {
   GET_CASH_SECURED_PUTS,
   SET_OTM_ITM_PERCENTAGES,
   SET_FOUND_STOCK,
-  SET_FOUND_OPTION
+  SET_FOUND_OPTION,
+  SET_SIDE,
+  SET_CALL_CALCULATIONLIMIT,
+  SET_PUT_CALCULATIONLIMIT,
+  SET_SCREENER_CALCULATIONLIMIT,
+  GET_MARKET_STATUS,
 } from "./types";
 import { backendUrl } from "../config/url";
 
 export const getCoveredCallPremium = (data, callback) => async (dispatch) => {
   try {
     await axios
-      .post(backendUrl + "/api/stock/getCoveredcallPremium", data)
+      .post(backendUrl + "/api/stock/getCoveredcallPremium", data, {
+        withCredentials: true,
+      })
       .then((res) => {
         const {
           sharePrices,
@@ -112,6 +120,11 @@ export const getCoveredCallPremium = (data, callback) => async (dispatch) => {
                 payload: { message: false },
               });
             }, 3000);
+          } else if (err.response && err.response.status === 403) {
+            dispatch({
+              type: SET_CALL_CALCULATIONLIMIT,
+              payload: { value: true },
+            });
           }
         } else {
           dispatch({
@@ -213,13 +226,16 @@ export const getCategory = (user) => async (dispatch) => {
   }
 };
 
-export const addCategory = (user) => async (dispatch) => {
+export const addCategory = (user, callback) => async (dispatch) => {
   try {
     const res = await axios.post(backendUrl + "/api/stock/addCategory", user);
 
     if (res.data.message) {
       //if the same category already exists
-      return false;
+      // return false;
+      callback && callback(false);
+
+      return;
     }
 
     const categories = res.data.categories;
@@ -229,9 +245,11 @@ export const addCategory = (user) => async (dispatch) => {
       payload: { categories },
     });
 
-    return true;
+    // return true;
+    callback && callback(true);
   } catch (err) {
     console.log(err);
+    callback && callback(true);
   }
 };
 
@@ -287,11 +305,20 @@ export const deleteCategory = (data) => async (dispatch) => {
   }
 };
 
-export const setSelectedSymbolsForCalcuation = (data) => async (dispatch) => {
+export const setSelectedSymbolsForCalculation = (data) => async (dispatch) => {
   const symbols = data.symbols;
 
   dispatch({
     type: SET_SELECTED_SYMBOLS_FOR_CALCULATION,
+    payload: { symbols },
+  });
+};
+
+export const setSelectedSymbolsForPut = (data) => async (dispatch) => {
+  const symbols = data.symbols;
+
+  dispatch({
+    type: SET_SELECTED_SYMBOLS_FOR_PUT,
     payload: { symbols },
   });
 };
@@ -331,7 +358,8 @@ export const getBasicResult = (data, callback) => async (dispatch) => {
   try {
     const res = await axios.post(
       backendUrl + "/api/stock/getBasicResult",
-      data
+      data,
+      { withCredentials: true }
     );
 
     const { basicFilterResult } = res.data;
@@ -342,11 +370,17 @@ export const getBasicResult = (data, callback) => async (dispatch) => {
     });
 
     dispatch({
-      type: SET_FOUND_STOCK
-    })
+      type: SET_FOUND_STOCK,
+    });
 
     callback && callback();
   } catch (error) {
+    if (error.response && error.response.status === 403) {
+      dispatch({
+        type: SET_SCREENER_CALCULATIONLIMIT,
+        payload: { value: true },
+      });
+    }
     console.log(error.message);
     callback && callback();
   }
@@ -370,8 +404,8 @@ export const getOptions = (data, callback) => async (dispatch) => {
     });
 
     dispatch({
-      type: SET_FOUND_OPTION
-    })
+      type: SET_FOUND_OPTION,
+    });
 
     callback && callback();
   } catch (error) {
@@ -418,7 +452,9 @@ export const getSearchResult = (data, callback) => async (dispatch) => {
 export const getCashSecuredPuts = (data, callback) => async (dispatch) => {
   try {
     await axios
-      .post(backendUrl + "/api/stock/getCashSecuredPuts", data)
+      .post(backendUrl + "/api/stock/getCashSecuredPuts", data, {
+        withCredentials: true,
+      })
       .then((res) => {
         const {
           sharePrices,
@@ -492,6 +528,11 @@ export const getCashSecuredPuts = (data, callback) => async (dispatch) => {
                 payload: { message: false },
               });
             }, 3000);
+          } else if (err.response && err.response.status === 403) {
+            dispatch({
+              type: SET_PUT_CALCULATIONLIMIT,
+              payload: { value: true },
+            });
           }
         } else {
           dispatch({
@@ -525,4 +566,26 @@ export const setOTMITMPercentages = (data) => async (dispatch) => {
     type: SET_OTM_ITM_PERCENTAGES,
     payload: { percentages2: percentages },
   });
+};
+
+export const set_Side = (data) => async (dispatch) => {
+  dispatch({
+    type: SET_SIDE,
+    payload: { side: data.side },
+  });
+};
+
+export const getMarketStatus = () => async (dispatch) => {
+  try {
+    const res = await axios.get(backendUrl + "/api/stock/getMarketStatus");
+
+    const { marketStatus } = res.data;
+
+    dispatch({
+      type: GET_MARKET_STATUS,
+      payload: { marketStatus },
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };

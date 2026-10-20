@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   useMediaQuery,
   Table,
@@ -7,6 +7,7 @@ import {
   TableRow,
   TableCell,
   Box,
+  Typography,
 } from "@mui/material";
 
 import { useSelector } from "react-redux";
@@ -22,6 +23,11 @@ const OptionsResult = () => {
     marginBottom: isSmScreen ? 25 : 15,
     padding: isSmScreen ? "25px 100px" : "25px 15px",
   };
+  const side = useSelector((state) => state.stock.side);
+
+  useEffect(() => {
+    setResult({ symbols: [] });
+  }, [side]);
 
   const rowNames = [
     "Symbol",
@@ -29,257 +35,283 @@ const OptionsResult = () => {
     "Expiry Date",
     "Strike Price",
     "Premium $",
-    "ROI %",
-    "Annual ROI %",
+    side === "Calls" ? "ROI %" : "ROR %",
+    side === "Calls" ? "Annual ROI %" : "Annual ROR %",
     "Open Interest",
     "Implied Volatility",
   ];
   const optionFilterResult = useSelector(
     (state) => state.stock.optionFilterResult
   );
+  const [result, setResult] = useState({ symbols: [] });
   const bFoundOption = useSelector((state) => state.stock.bFoundOption);
+
+  useEffect(() => {
+      setResult({
+        symbols: optionFilterResult.symbols,
+        sharePrices: optionFilterResult.sharePrices,
+        expiry_dates: optionFilterResult.expiry_dates,
+        strikePrices: optionFilterResult.strikePrices,
+        premiums: optionFilterResult.premiums,
+        ROIs: optionFilterResult.ROIs,
+        annualROIs: optionFilterResult.annualROIs,
+        RORs: optionFilterResult.RORs,
+        annualRORs: optionFilterResult.annualRORs,
+        OIs: optionFilterResult.OIs,
+        IVs: optionFilterResult.IVs,
+      });
+  }, [optionFilterResult]);
 
   return (
     bFoundOption && (
-      <fieldset style={fieldsetStyle}>
-        <legend>Options</legend>
-        <Box sx={{ width: isSmScreen ? "50vw" : "80vw" }}>
-          <TableContainer>
-            {optionFilterResult.symbols.length > 0 && (
-              <Table
-                aria-label="covered call premiums table"
-                sx={{ "& .MuiTableCell-body": { fontSize: 16 } }}
-              >
-                <TableBody
-                  sx={{
-                    "&:last-child td, &:last-child th": {
-                      borderBottom: "none",
-                      color: "white",
-                    },
-                  }}
+      <Box>
+        <fieldset style={fieldsetStyle}>
+          <legend>Options</legend>
+          <Box sx={{ width: isSmScreen ? "50vw" : "80vw" }}>
+            <TableContainer>
+              {result.symbols.length > 0 && (
+                <Table
+                  aria-label="covered call premiums table"
+                  sx={{ "& .MuiTableCell-body": { fontSize: 16 } }}
                 >
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  <TableBody
+                    sx={{
+                      "&:last-child td, &:last-child th": {
+                        borderBottom: "none",
+                        color: "white",
+                      },
+                    }}
                   >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="left"
-                      sx={{
-                        color: `${theme.palette.text.third} !important`,
-                        fontWeight: 800,
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        backgroundColor: theme.palette.background.default,
-                      }}
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
-                      {rowNames[0]}
-                    </TableCell>
-                    {optionFilterResult.symbols.map((item, index) => (
-                      <TableCell align="center" key={index}>
-                        {item}
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        align="left"
+                        sx={{
+                          color: `${theme.palette.text.third} !important`,
+                          fontWeight: 800,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          backgroundColor: theme.palette.background.default,
+                        }}
+                      >
+                        {rowNames[0]}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="left"
-                      sx={{
-                        color: `${theme.palette.text.third} !important`,
-                        fontWeight: 600,
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        backgroundColor: theme.palette.background.default,
-                      }}
+                      {result.symbols.map((item, index) => (
+                        <TableCell align="center" key={index}>
+                          {item}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
-                      {rowNames[1]}
-                    </TableCell>
-                    {optionFilterResult.sharePrices.map((item, index) => (
-                      <TableCell align="center" key={index}>
-                        ${Intl.NumberFormat("en-US").format(item * 100)}
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        align="left"
+                        sx={{
+                          color: `${theme.palette.text.third} !important`,
+                          fontWeight: 600,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          backgroundColor: theme.palette.background.default,
+                        }}
+                      >
+                        {rowNames[1]}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="left"
-                      sx={{
-                        color: `${theme.palette.text.third} !important`,
-                        fontWeight: 600,
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        backgroundColor: theme.palette.background.default,
-                      }}
+                      {result.sharePrices.map((item, index) => (
+                        <TableCell align="center" key={index}>
+                          ${Intl.NumberFormat("en-US").format(item * 100)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
-                      {rowNames[2]}
-                    </TableCell>
-                    {optionFilterResult.expiry_dates.map((item, index) => (
-                      <TableCell align="center" key={index}>
-                        {item}
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        align="left"
+                        sx={{
+                          color: `${theme.palette.text.third} !important`,
+                          fontWeight: 600,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          backgroundColor: theme.palette.background.default,
+                        }}
+                      >
+                        {rowNames[2]}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="left"
-                      sx={{
-                        color: `${theme.palette.text.third} !important`,
-                        fontWeight: 600,
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        backgroundColor: theme.palette.background.default,
-                      }}
+                      {result.expiry_dates.map((item, index) => (
+                        <TableCell align="center" key={index}>
+                          {item}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
-                      {rowNames[3]}
-                    </TableCell>
-                    {optionFilterResult.strikePrices.map((item, index) => (
-                      <TableCell align="center" key={index}>
-                        ${item}
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        align="left"
+                        sx={{
+                          color: `${theme.palette.text.third} !important`,
+                          fontWeight: 600,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          backgroundColor: theme.palette.background.default,
+                        }}
+                      >
+                        {rowNames[3]}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="left"
-                      sx={{
-                        color: `${theme.palette.text.third} !important`,
-                        fontWeight: 600,
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        backgroundColor: theme.palette.background.default,
-                      }}
+                      {result.strikePrices.map((item, index) => (
+                        <TableCell align="center" key={index}>
+                          ${item}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
-                      {rowNames[4]}
-                    </TableCell>
-                    {optionFilterResult.premiums.map((item, index) => (
-                      <TableCell align="center" key={index}>
-                        ${item}
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        align="left"
+                        sx={{
+                          color: `${theme.palette.text.third} !important`,
+                          fontWeight: 600,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          backgroundColor: theme.palette.background.default,
+                        }}
+                      >
+                        {rowNames[4]}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="left"
-                      sx={{
-                        color: `${theme.palette.text.third} !important`,
-                        fontWeight: 600,
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        backgroundColor: theme.palette.background.default,
-                      }}
+                      {result.premiums.map((item, index) => (
+                        <TableCell align="center" key={index}>
+                          ${item}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
-                      {rowNames[5]}
-                    </TableCell>
-                    {optionFilterResult.ROIs.map((item, index) => (
-                      <TableCell align="center" key={index}>
-                        {item}%
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        align="left"
+                        sx={{
+                          color: `${theme.palette.text.third} !important`,
+                          fontWeight: 600,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          backgroundColor: theme.palette.background.default,
+                        }}
+                      >
+                        {rowNames[5]}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="left"
-                      sx={{
-                        color: `${theme.palette.text.third} !important`,
-                        fontWeight: 600,
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        backgroundColor: theme.palette.background.default,
-                      }}
+                      {(side === "Calls" ? result.ROIs : result.RORs).map(
+                        (item, index) => (
+                          <TableCell align="center" key={index}>
+                            {item}%
+                          </TableCell>
+                        )
+                      )}
+                    </TableRow>
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
-                      {rowNames[6]}
-                    </TableCell>
-                    {optionFilterResult.annualROIs.map((item, index) => (
-                      <TableCell align="center" key={index}>
-                        {item}%
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        align="left"
+                        sx={{
+                          color: `${theme.palette.text.third} !important`,
+                          fontWeight: 600,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          backgroundColor: theme.palette.background.default,
+                        }}
+                      >
+                        {rowNames[6]}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="left"
-                      sx={{
-                        color: `${theme.palette.text.third} !important`,
-                        fontWeight: 600,
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        backgroundColor: theme.palette.background.default,
-                      }}
+                      {(side === "Calls" ? result.annualROIs : result.annualRORs).map((item, index) => (
+                        <TableCell align="center" key={index}>
+                          {item}%
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
-                      {rowNames[7]}
-                    </TableCell>
-                    {optionFilterResult.OIs.map((item, index) => (
-                      <TableCell align="center" key={index}>
-                        {item}
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        align="left"
+                        sx={{
+                          color: `${theme.palette.text.third} !important`,
+                          fontWeight: 600,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          backgroundColor: theme.palette.background.default,
+                        }}
+                      >
+                        {rowNames[7]}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                  <TableRow
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell
-                      component="th"
-                      scope="row"
-                      align="left"
-                      sx={{
-                        color: `${theme.palette.text.third} !important`,
-                        fontWeight: 600,
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 1,
-                        backgroundColor: theme.palette.background.default,
-                      }}
+                      {result.OIs.map((item, index) => (
+                        <TableCell align="center" key={index}>
+                          {item}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    <TableRow
+                      sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
-                      {rowNames[8]}
-                    </TableCell>
-                    {optionFilterResult.IVs.map((item, index) => (
-                      <TableCell align="center" key={index}>
-                        {item * 100}%
+                      <TableCell
+                        component="th"
+                        scope="row"
+                        align="left"
+                        sx={{
+                          color: `${theme.palette.text.third} !important`,
+                          fontWeight: 600,
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 1,
+                          backgroundColor: theme.palette.background.default,
+                        }}
+                      >
+                        {rowNames[8]}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                </TableBody>
-              </Table>
-            )}
-          </TableContainer>
-        </Box>
-      </fieldset>
+                      {result.IVs.map((item, index) => (
+                        <TableCell align="center" key={index}>
+                          {item * 100}%
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              )}
+            </TableContainer>
+          </Box>
+          {result.symbols.length === 0 && (
+            <Typography textAlign="center" variant="h3">
+              No available options!
+            </Typography>
+          )}
+        </fieldset>
+      </Box>
     )
   );
 };

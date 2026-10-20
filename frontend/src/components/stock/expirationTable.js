@@ -1,11 +1,15 @@
 import * as React from "react";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import { Box, Typography } from "@mui/material";
+
+import {
+  Box,
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 import { useTheme } from "@emotion/react";
 import { connect } from "react-redux";
 
@@ -20,6 +24,7 @@ const ExpirationTable = ({ expirations }) => {
         borderColor: theme.palette.text.third,
         borderRadius: 5,
         marginTop: "3vh",
+        marginBottom: '13vh'
       }}
     >
       <Box
@@ -54,7 +59,7 @@ const ExpirationTable = ({ expirations }) => {
                     sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
                     <TableCell align="center">{index + 1}</TableCell>
-                    <TableCell align="center">{expiration['date']}</TableCell>
+                    <TableCell align="center">{expiration["date"]}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

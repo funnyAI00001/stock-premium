@@ -7,12 +7,32 @@ const path = require("path");
 const router = express.Router();
 
 const User = require("../models/user");
+const UnknownUser = require("../models/unknownUser");
 let backendUrl = "http://localhost:5001/";
 require("dotenv").config();
 
 if (process.env.NODE_ENV === "production") {
   backendUrl = "";
 }
+
+router.post("/trackVisitor", async (req, res) => {
+  try {
+    const { visitorId } = req.body;
+
+    const existingVisitor = await UnknownUser.findOne({ visitorId });
+
+    if (!existingVisitor) {
+      const newVisitor = new UnknownUser({ visitorId });
+      await newVisitor.save();
+    }
+
+    res.status(200).json({ message: "success" });
+  } catch (error) {
+    console.log(error.message);
+
+    res.status(500).json({ message: error.message });
+  }
+});
 
 router.post("/checkUser", async (req, res) => {
   try {
