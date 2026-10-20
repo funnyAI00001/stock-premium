@@ -55,6 +55,9 @@ const main = async () => {
       const SharesOutstanding = response.data.SharesOutstanding;
       const industry = response.data.Industry;
       const name = response.data.Name;
+      const PERatio = response.data.PERatio;
+      const dividend_Yield = response.data.DividendYield;
+      const PriceToBookRatio = response.data.PriceToBookRatio;
 
       console.log(Beta1);
 
@@ -62,9 +65,15 @@ const main = async () => {
         MarketCapitalization === "None" ||
         Beta1 === "None" ||
         SharesOutstanding === "None" ||
+        PERatio === "None" ||
+        dividend_Yield === "None" ||
+        PriceToBookRatio === "None" ||
         MarketCapitalization === undefined ||
         Beta1 === undefined ||
-        SharesOutstanding === undefined
+        SharesOutstanding === undefined ||
+        PERatio === undefined ||
+        dividend_Yield === undefined ||
+        PriceToBookRatio === undefined
       ) {
         continue;
       }
@@ -74,6 +83,9 @@ const main = async () => {
       const sharePrice = parseFloat(
         (MarketCapitalization / SharesOutstanding).toFixed(2)
       );
+      const PE = parseFloat(PERatio);
+      const DividendYield = parseFloat(dividend_Yield);
+      const PB = parseFloat(PriceToBookRatio);
 
       const existingStock = await Stock.findOne({ symbol });
 
@@ -88,6 +100,9 @@ const main = async () => {
               beta,
               sharePrice,
               name,
+              PE,
+              DividendYield,
+              PB,
               date: new Date(),
             },
           },
@@ -102,6 +117,10 @@ const main = async () => {
           beta,
           sharePrice,
           name,
+          PE,
+          DividendYield,
+          PB,
+          date: new Date(),
         });
 
         await newStock.save();

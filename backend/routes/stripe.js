@@ -146,6 +146,10 @@ router.post("/create-checkout-session", async (req, res) => {
       },
     ],
     mode: "subscription",
+    subscription_data: {
+
+      trial_period_days: 14,
+    },
     allow_promotion_codes: true,
     success_url: `${YOUR_DOMAIN}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${YOUR_DOMAIN}?canceled=true`,

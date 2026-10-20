@@ -19,7 +19,11 @@ import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import SchoolIcon from "@mui/icons-material/School";
 import ForumIcon from "@mui/icons-material/Forum";
 import CameraIcon from "@mui/icons-material/Camera";
-import PaidIcon from "@mui/icons-material/Paid";
+// import PaidIcon from "@mui/icons-material/Paid";
+// import ContactSupportIcon from "@mui/icons-material/ContactSupport";
+import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
+import KeyboardDoubleArrowUpIcon from "@mui/icons-material/KeyboardDoubleArrowUp";
+import HandshakeIcon from '@mui/icons-material/Handshake';
 import "@fontsource/roboto";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -37,7 +41,7 @@ import { getStripeStatus } from "../../actions/stripeAction";
 
 import AccountPopover from "../account/accountPopover";
 
-const drawerWidth = 240; // Width of sidebar
+const drawerWidth = 260; // Width of sidebar
 
 const DrawerAppBar = (props) => {
   const { user, isAuthenticated } = useAuth0();
@@ -69,7 +73,15 @@ const DrawerAppBar = (props) => {
   };
   const [isOffline, setIsOffline] = useState(!navigator.onLine); // To display whether client is offline or not
   const routes = useMemo(
-    () => ["shortlist", "earn", "options_screener", "education", "community"],
+    () => [
+      "shortlist",
+      "earn",
+      "options_screener",
+      "cashSecuredPuts",
+      "education",
+      "community",
+      "contactus",
+    ],
     []
   );
 
@@ -136,6 +148,7 @@ const DrawerAppBar = (props) => {
           "Shortlist",
           "Coverd Calls",
           "Options Screener",
+          "Cash Secured Puts",
           "Education",
           "Community",
         ].map((text, index) => (
@@ -151,10 +164,12 @@ const DrawerAppBar = (props) => {
                 {index === 0 ? (
                   <FormatListBulletedIcon />
                 ) : index === 1 ? (
-                  <PaidIcon />
+                  <KeyboardDoubleArrowUpIcon />
                 ) : index === 2 ? (
                   <CameraIcon />
                 ) : index === 3 ? (
+                  <KeyboardDoubleArrowDownIcon />
+                ) : index === 4 ? (
                   <SchoolIcon />
                 ) : (
                   <ForumIcon />
@@ -166,6 +181,23 @@ const DrawerAppBar = (props) => {
             </ListItemButton>
           </ListItem>
         ))}
+      </List>
+      <List sx={{ marginTop: 5 }}>
+        <ListItem
+          disablePadding
+          onClick={() => {
+            setSelectedIndex(6);
+          }}
+        >
+          <ListItemButton selected={selectedIndex === 6}>
+            <ListItemIcon>
+              <HandshakeIcon />
+            </ListItemIcon>
+            <NavLink to={routes[6]} style={{ textDecoration: "none" }}>
+              <ListItemText primary='Contact Us' />
+            </NavLink>
+          </ListItemButton>
+        </ListItem>
       </List>
     </Box>
   );

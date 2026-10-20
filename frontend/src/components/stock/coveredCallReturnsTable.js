@@ -253,7 +253,7 @@ const CoveredCallReturnsTable = ({
                   ))}
                 </TableRow>
                 <TableRow>
-                  <TableCell colSpan={maxReturns.length + 1}>
+                  <TableCell colSpan={sharePrices.length + 1}>
                     <Divider sx={{ backgroundColor: "text.third" }} />
                   </TableCell>
                 </TableRow>

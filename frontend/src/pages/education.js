@@ -1,11 +1,19 @@
 import React from "react";
-import { Typography } from "@mui/material";
+import { Box } from "@mui/material";
 
 const Education = () => {
   return (
-    <Typography variant="h3" mt={2} textAlign="center">
+    <Box
+      minHeight={600}
+      textAlign="center"
+      fontSize={50}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      color="text.third"
+    >
       Coming Soon!
-    </Typography>
+    </Box>
   );
 };
 

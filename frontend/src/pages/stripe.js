@@ -19,8 +19,8 @@ const SuccessDisplay = ({ sessionId }) => {
     ? {
         paddingLeft: 0,
         paddingRight: 0,
-        marginLeft: "-120px",
-        marginRight: -120,
+        marginLeft: "-130px",
+        marginRight: -130,
       }
     : {};
 
@@ -90,8 +90,8 @@ const ProductDisplay = () => {
     ? {
         paddingLeft: 0,
         paddingRight: 0,
-        marginLeft: -120,
-        marginRight: 120,
+        marginLeft: -130,
+        marginRight: 130,
       }
     : {};
 

@@ -21,6 +21,8 @@ import Community from "./pages/community";
 import Education from "./pages/education";
 import NotFound from "./pages/notFound";
 import SymbolList from "./pages/symbolLists";
+import ContactUs from "./pages/contactUs";
+import CashSecuredPuts from "./pages/cashSecuredPuts";
 
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -31,8 +33,8 @@ const App = () => {
     ? {
         paddingLeft: 0,
         paddingRight: 0,
-        width: `calc(100% - ${240}px)`,
-        marginLeft: 240,
+        width: `calc(100% - ${260}px)`,
+        marginLeft: 260,
       }
     : {
         paddingLeft: 10,
@@ -55,6 +57,11 @@ const App = () => {
                 ></Route>
                 <Route exact path="/register" element={<Register />}></Route>
                 <Route exact path="/about" element={<About />}></Route>
+                <Route
+                  exact
+                  path="/contactus"
+                  element={<PrivateRoute component={ContactUs} />}
+                ></Route>
                 <Route
                   exact
                   path="/dashboard"
@@ -95,6 +102,11 @@ const App = () => {
                   path="/symbolLists"
                   element={<PrivateRoute component={SymbolList} />}
                 ></Route>
+                <Route
+                  exact
+                  path="/cashSecuredPuts"
+                  element={<PrivateRoute component={CashSecuredPuts} />}
+                />
                 <Route exact path="*" element={<NotFound />}></Route>
               </Routes>
             </Container>

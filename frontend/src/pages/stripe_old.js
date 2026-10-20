@@ -57,7 +57,7 @@ const Stripe = () => {
   };
 
   return (
-    <Grid container spacing={0} marginLeft={isSmScreen ? "-120px" : ""}>
+    <Grid container spacing={0} marginLeft={isSmScreen ? "-130px" : ""}>
       <Grid item xs={12}>
         <Button
           variant="outlined"

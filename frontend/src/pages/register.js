@@ -81,7 +81,7 @@ const Register = () => {
   };
 
   return (
-    <Grid component="main" sx={isSmScreen ? { marginLeft: "-240px" } : {}}>
+    <Grid component="main" sx={isSmScreen ? { marginLeft: "-260px" } : {}}>
       <CssBaseline />
       <Typography variant="h1" color="text.third" m={2}>
         COVERD.io

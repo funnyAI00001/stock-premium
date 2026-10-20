@@ -24,18 +24,17 @@ const BasicFilterResult = () => {
     padding: isSmScreen ? "25px 100px" : "25px 5px",
     color: "white",
   };
-  // const symbols = ["BABA", "IBM", "TSLA"];
-  // const sharePrices = [74.25, 189.82, 210.14];
-  // const betas = [0.465, 0.714, 2];
-  // const marketCaps = ["128B", "248B", "560B"];
-  // const sectors = ["Trade & Services", "Technology", "Manufacturing"];
+
   const rowNames = [
     "",
     "Symbol",
-    "Company",
+    "Company Name",
     "Share price",
-    "Beta",
     "Market Cap",
+    "Beta",
+    "P/E",
+    "Dividend Yield",
+    "P/B",
     "Industry",
   ];
   const basicFilterResult = useSelector(
@@ -46,7 +45,7 @@ const BasicFilterResult = () => {
     <fieldset style={fieldsetStyle}>
       <legend>Stocks</legend>
 
-      <Box sx={{ width: isSmScreen ? "50vw" : "85vw" }}>
+      <Box sx={{ maxWidth: isSmScreen ? "50vw" : "85vw" }}>
         <TableContainer sx={{ "& .MuiTableCell-body": { fontSize: 16 } }}>
           {basicFilterResult.length > 0 && (
             <Table aria-label="covered call premiums table">
@@ -170,7 +169,7 @@ const BasicFilterResult = () => {
                   </TableCell>
                   {basicFilterResult.map((item, index) => (
                     <TableCell align="center" key={index}>
-                      {item.beta}
+                      ${formatNumber(item.marketCap)}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -193,7 +192,7 @@ const BasicFilterResult = () => {
                   </TableCell>
                   {basicFilterResult.map((item, index) => (
                     <TableCell align="center" key={index}>
-                      ${formatNumber(item.marketCap)}
+                      {item.beta}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -213,6 +212,75 @@ const BasicFilterResult = () => {
                     }}
                   >
                     {rowNames[6]}
+                  </TableCell>
+                  {basicFilterResult.map((item, index) => (
+                    <TableCell align="center" key={index}>
+                      {item.PE}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                >
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    align="left"
+                    sx={{
+                      color: `${theme.palette.text.third} !important`,
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 1,
+                      backgroundColor: theme.palette.background.default,
+                    }}
+                  >
+                    {rowNames[7]}
+                  </TableCell>
+                  {basicFilterResult.map((item, index) => (
+                    <TableCell align="center" key={index}>
+                      {(item.DividendYield * 100).toFixed(2)}%
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                >
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    align="left"
+                    sx={{
+                      color: `${theme.palette.text.third} !important`,
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 1,
+                      backgroundColor: theme.palette.background.default,
+                    }}
+                  >
+                    {rowNames[8]}
+                  </TableCell>
+                  {basicFilterResult.map((item, index) => (
+                    <TableCell align="center" key={index}>
+                      {item.PB}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow
+                  sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                >
+                  <TableCell
+                    component="th"
+                    scope="row"
+                    align="left"
+                    sx={{
+                      color: `${theme.palette.text.third} !important`,
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 1,
+                      backgroundColor: theme.palette.background.default,
+                    }}
+                  >
+                    {rowNames[9]}
                   </TableCell>
                   {basicFilterResult.map((item, index) => (
                     <TableCell align="center" key={index}>

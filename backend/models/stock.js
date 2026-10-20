@@ -29,6 +29,18 @@ const stockSchema = new mongoose.Schema({
     type: String,
   },
 
+  PE: {
+    type: Number,
+  },
+
+  DividendYield: {
+    type: Number,
+  },
+
+  PB: {
+    type: Number,
+  },
+
   date: {
     type: Date,
     default: Date.now,

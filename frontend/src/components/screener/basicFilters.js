@@ -38,6 +38,11 @@ const BasicFilters = () => {
   const [minMarketCap, setMinMarketCap] = useState("250M");
   const [maxMarketCap, setMaxMarketCap] = useState("100B");
   const [selectedSectors, setSelectedSectors] = useState([]);
+  const [minPE, setMinPE] = useState(0);
+  const [maxPE, setMaxPE] = useState(5);
+  const [divYield, setDivYield] = useState(1);
+  const [minPB, setMinPB] = useState(0);
+  const [maxPB, setMaxPB] = useState(5);
   const sectors = [
     "Energy & Utilities",
     "Financial Services",
@@ -58,6 +63,8 @@ const BasicFilters = () => {
   const betas = ["Low", "Mid", "High"];
   const [openWarningForNoSector, setOpenWarningForNoSector] = useState(false);
   const [openWarningForNoBeta, setOpenWarningForNoBeta] = useState(false);
+  const [openWarningForPE, setOpenWarningForPE] = useState(false);
+  const [openWarningForPB, setOpenWarningForPB] = useState(false);
   const [isGettingBasicResult, setIsGettingBasicResult] = useState(false);
 
   const handleBetaChange = (event, beta) => {
@@ -81,6 +88,18 @@ const BasicFilters = () => {
       return;
     }
 
+    if (maxPE < minPE) {
+      setOpenWarningForPE(true);
+
+      return;
+    }
+
+    if (maxPB < minPB) {
+      setOpenWarningForPB(true);
+
+      return;
+    }
+
     setIsGettingBasicResult(true);
 
     dispatch(
@@ -92,6 +111,11 @@ const BasicFilters = () => {
           maxMarketCap: maxMarketCap,
           minSharePrice: minSharePrice !== "" ? minSharePrice : 0,
           maxSharePrice: maxSharePrice !== "" ? maxSharePrice : 1e6,
+          minPE: minPE,
+          maxPE: maxPE,
+          divYield: divYield,
+          minPB: minPB,
+          maxPB: maxPB,
         },
         onEndGetBasicResult
       )
@@ -289,6 +313,178 @@ const BasicFilters = () => {
             ))}
           </Grid>
         </Grid>
+        <Grid container spacing={1} marginTop={2} alignItems="center">
+          <Grid item xs={2} sm={4}>
+            <Typography
+              color="white"
+              variant="body1"
+              sx={{ fontSize: isSmScreen ? 18 : 14 }}
+            >
+              P/E
+            </Typography>
+          </Grid>
+          <Grid item xs={5} sm={4} display="flex" justifyContent="center">
+            <FormControl
+              sx={{
+                m: 1,
+                margin: 0,
+                width: "100%",
+                "& .MuiSelect-select": { borderColor: "white" },
+              }}
+            >
+              <InputLabel id="minPE">P/E Min</InputLabel>
+              <Select
+                labelId="minPE"
+                id="minPE"
+                label="P/E Min"
+                value={minPE}
+                onChange={(event) => {
+                  setMinPE(event.target.value);
+                }}
+              >
+                <MenuItem value={-100000}>Min</MenuItem>
+                <MenuItem value={0}>0</MenuItem>
+                <MenuItem value={1}>1</MenuItem>
+                <MenuItem value={2}>2</MenuItem>
+                <MenuItem value={5}>5</MenuItem>
+                <MenuItem value={11}>10</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={5} sm={4} display="flex" justifyContent="center">
+            <FormControl
+              sx={{
+                m: 1,
+                margin: 0,
+                width: "100%",
+                "& .MuiSelect-select": { borderColor: "white" },
+              }}
+            >
+              <InputLabel id="maxPE">P/E Max</InputLabel>
+              <Select
+                labelId="maxPE"
+                id="maxPE"
+                label="P/E Max"
+                value={maxPE}
+                onChange={(event) => {
+                  setMaxPE(event.target.value);
+                }}
+              >
+                <MenuItem value={10000000}>Max</MenuItem>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={5}>5</MenuItem>
+                <MenuItem value={2}>2</MenuItem>
+                <MenuItem value={1}>1</MenuItem>
+                <MenuItem value={0}>0</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+        <Grid container spacing={1} marginTop={2} alignItems="center">
+          <Grid item xs={2} sm={4}>
+            <Typography
+              color="white"
+              variant="body1"
+              sx={{ fontSize: isSmScreen ? 18 : 14 }}
+            >
+              Dividend Yield
+            </Typography>
+          </Grid>
+          <Grid item xs={5} sm={4} display="flex" justifyContent="center">
+            <FormControl
+              sx={{
+                m: 1,
+                margin: 0,
+                width: "100%",
+                "& .MuiSelect-select": { borderColor: "white" },
+              }}
+            >
+              <InputLabel id="divYield">Div % Yield</InputLabel>
+              <Select
+                labelId="divYield"
+                id="divYield"
+                label="Div % Yield"
+                value={divYield}
+                onChange={(event) => {
+                  setDivYield(event.target.value);
+                }}
+              >
+                <MenuItem value={0}>0</MenuItem>
+                <MenuItem value={1}>0-2%</MenuItem>
+                <MenuItem value={2}>2-5%</MenuItem>
+                <MenuItem value={3}>5-7%</MenuItem>
+                <MenuItem value={4}>{">"}7%</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+        <Grid container spacing={1} marginTop={2} alignItems="center">
+          <Grid item xs={2} sm={4}>
+            <Typography
+              color="white"
+              variant="body1"
+              sx={{ fontSize: isSmScreen ? 18 : 14 }}
+            >
+              P/B
+            </Typography>
+          </Grid>
+          <Grid item xs={5} sm={4} display="flex" justifyContent="center">
+            <FormControl
+              sx={{
+                m: 1,
+                margin: 0,
+                width: "100%",
+                "& .MuiSelect-select": { borderColor: "white" },
+              }}
+            >
+              <InputLabel id="minPB">P/B Min</InputLabel>
+              <Select
+                labelId="minPB"
+                id="minPB"
+                label="P/B Min"
+                value={minPB}
+                onChange={(event) => {
+                  setMinPB(event.target.value);
+                }}
+              >
+                <MenuItem value={-100000}>Min</MenuItem>
+                <MenuItem value={0}>0</MenuItem>
+                <MenuItem value={1}>1</MenuItem>
+                <MenuItem value={2}>2</MenuItem>
+                <MenuItem value={5}>5</MenuItem>
+                <MenuItem value={11}>10</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={5} sm={4} display="flex" justifyContent="center">
+            <FormControl
+              sx={{
+                m: 1,
+                margin: 0,
+                width: "100%",
+                "& .MuiSelect-select": { borderColor: "white" },
+              }}
+            >
+              <InputLabel id="maxPB">P/B Max</InputLabel>
+              <Select
+                labelId="maxPB"
+                id="maxPB"
+                label="P/E Max"
+                value={maxPB}
+                onChange={(event) => {
+                  setMaxPB(event.target.value);
+                }}
+              >
+                <MenuItem value={10000000}>Max</MenuItem>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={5}>5</MenuItem>
+                <MenuItem value={2}>2</MenuItem>
+                <MenuItem value={1}>1</MenuItem>
+                <MenuItem value={0}>0</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
       </fieldset>
       <Box textAlign="center" marginY={3}>
         <Button
@@ -320,6 +516,24 @@ const BasicFilters = () => {
         autoHideDuration={6000}
         onClose={() => {
           setOpenWarningForNoBeta(false);
+        }}
+      />
+      <CustomAlert
+        openState={openWarningForPE}
+        severity="warning"
+        text="The maximum PE must be greater than the minimum PE!"
+        autoHideDuration={6000}
+        onClose={() => {
+          setOpenWarningForPE(false);
+        }}
+      />
+      <CustomAlert
+        openState={openWarningForPB}
+        severity="warning"
+        text="The maximum PB must be greater than the minimum PB!"
+        autoHideDuration={6000}
+        onClose={() => {
+          setOpenWarningForPB(false);
         }}
       />
 

@@ -436,6 +436,7 @@ const Calculate = ({
   // Weekly option select/disselect
   const handleWeeklyOption = (event) => {
     setWeeklyOption(event.target.checked);
+    setOpenWarningForNoSupportSymbol(false);
 
     if (event.target.checked) {
       const filteredSymbols = symbols.filter((item) => item !== "");
@@ -448,7 +449,7 @@ const Calculate = ({
           handleEndGettingWeeklyOption
         )
       );
-    }
+    } 
   };
 
   const handleEndGettingWeeklyOption = () => {

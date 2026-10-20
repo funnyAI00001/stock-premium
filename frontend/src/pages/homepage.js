@@ -18,7 +18,7 @@ const Homepage = () => {
   }, [isAuthenticated, navigate]);
 
   return (
-    <div style={isSmScreen ? { marginLeft: -240 } : {}}>
+    <div style={isSmScreen ? { marginLeft: -260 } : {}}>
       <Helmet>
         <script>{`
                 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?

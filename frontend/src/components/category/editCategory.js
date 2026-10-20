@@ -22,6 +22,8 @@ import LoadingOverlay from "../dialog/loadingOverlay";
 import CustomAlert from "../customAlert";
 import ConfirmationDialog from "../dialog/confirmDialog";
 
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+
 const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -115,6 +117,15 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
     }, 2000);
   };
 
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+    const items = Array.from(symbols);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setSymbols(items);
+  };
+
   return (
     <Box
       sx={{
@@ -165,62 +176,93 @@ const EditCategory = ({ onCancel, onSave, name, parentSymbols, user }) => {
             },
           }}
         />
-        {symbols.map((symbol, index) => (
-          <Grid container display="flex" alignItems="center" key={index}>
-            <Grid item xs={2} sm={3} textAlign="right">
-              <Typography variant="body1" color="white" paddingRight={1}>
-                {index + 1}
-                {"."}
-              </Typography>
-            </Grid>
-            <Grid
-              item
-              xs={8}
-              sm={6}
-              sx={{ "& .MuiInputBase-input": { color: "black" } }}
-            >
-              <TextField
-                key={index}
-                value={symbol}
-                autoComplete="off"
-                onChange={(e) => handleSymbolChange(e, index)}
-                variant="outlined"
-                sx={{
-                  marginTop: 1,
-                  marginBottom: 1,
-                  background: "white",
-                  borderRadius: "10px",
-                }}
-                inputProps={{
-                  autoComplete: "new-email",
-                }}
-                style={{ color: "black !important" }}
-              />
-            </Grid>
-            <Grid
-              item
-              xs={2}
-              sm={3}
-              textAlign="center"
-              sx={{ paddingRight: { xs: 0, md: 3 } }}
-            >
-              {index !== 0 && (
-                <IconButton
-                  aria-label="delete"
-                  sx={{
-                    border: "none !important",
-                    width: "unset",
-                  }}
-                  onClick={() => {
-                    handleDeleteSymbol(index);
-                  }}
-                >
-                  <RemoveCircleIcon />
-                </IconButton>
-              )}
-            </Grid>
-          </Grid>
-        ))}
+
+        <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId="symbols">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {symbols.map((symbol, index) => (
+                  <Draggable key={symbol} draggableId={symbol} index={index}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                      >
+                        <Grid
+                          container
+                          display="flex"
+                          alignItems="center"
+                          key={index}
+                        >
+                          <Grid item xs={2} sm={3} textAlign="right">
+                            <Typography
+                              variant="body1"
+                              color="white"
+                              paddingRight={1}
+                            >
+                              {index + 1}
+                              {"."}
+                            </Typography>
+                          </Grid>
+                          <Grid
+                            item
+                            xs={8}
+                            sm={6}
+                            sx={{ "& .MuiInputBase-input": { color: "black" } }}
+                          >
+                            <TextField
+                              key={index}
+                              value={symbol}
+                              autoComplete="off"
+                              onChange={(e) => handleSymbolChange(e, index)}
+                              variant="outlined"
+                              autoFocus
+                              sx={{
+                                marginTop: 1,
+                                marginBottom: 1,
+                                background: "white",
+                                borderRadius: "10px",
+                              }}
+                              inputProps={{
+                                autoComplete: "new-email",
+                              }}
+                              style={{ color: "black !important" }}
+                            />
+                          </Grid>
+                          <Grid
+                            item
+                            xs={2}
+                            sm={3}
+                            textAlign="center"
+                            sx={{ paddingRight: { xs: 0, md: 3 } }}
+                          >
+                            {index !== 0 && (
+                              <IconButton
+                                aria-label="delete"
+                                sx={{
+                                  border: "none !important",
+                                  width: "unset",
+                                }}
+                                onClick={() => {
+                                  handleDeleteSymbol(index);
+                                }}
+                              >
+                                <RemoveCircleIcon />
+                              </IconButton>
+                            )}
+                          </Grid>
+                        </Grid>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
+        {/* end */}
+
         <div style={{ textAlign: "center" }}>
           <IconButton
             aria-label="add"

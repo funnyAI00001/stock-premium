@@ -448,6 +448,11 @@ router.post("/getBasicResult", async (req, res) => {
     maxMarketCap,
     minSharePrice,
     maxSharePrice,
+    minPE,
+    maxPE,
+    divYield,
+    minPB,
+    maxPB,
   } = req.body;
 
   const jsonData = fs.readFileSync("sectorsData.json", "utf8");
@@ -464,6 +469,32 @@ router.post("/getBasicResult", async (req, res) => {
   };
 
   const betaQuery = betas.map((category) => ({ beta: beta[category] }));
+  let divYieldQuery;
+
+  switch (divYield) {
+    case 0:
+      divYieldQuery = { $eq: 0 };
+      break;
+
+    case 1:
+      divYieldQuery = { $gt: 0, $lte: 0.02 };
+      break;
+
+    case 2:
+      divYieldQuery = { $gt: 0.02, $lte: 0.05 };
+      break;
+
+    case 3:
+      divYieldQuery = { $gt: 0.05, $lte: 0.07 };
+      break;
+
+    case 4:
+      divYieldQuery = { $gt: 0.07 };
+      break;
+
+    default:
+      break;
+  }
 
   const minMarketCapQuery = convertStringToNumber(minMarketCap);
   const maxMarketCapQuery = convertStringToNumber(maxMarketCap);
@@ -472,7 +503,10 @@ router.post("/getBasicResult", async (req, res) => {
     industry: { $in: industries },
     sharePrice: { $gte: minSharePrice, $lte: maxSharePrice },
     marketCap: { $gte: minMarketCapQuery, $lte: maxMarketCapQuery },
+    PE: { $gte: minPE, $lte: maxPE },
+    PB: { $gte: minPB, $lte: maxPB },
     $or: betaQuery,
+    DividendYield: divYieldQuery
   });
 
   res.status(200).json({ basicFilterResult });

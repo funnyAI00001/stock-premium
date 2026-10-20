@@ -10,7 +10,7 @@ const NotFound = () => {
   return (
     <Box
       textAlign="center"
-      marginLeft={isSmScreen ? "-240px" : ""}
+      marginLeft={isSmScreen ? "-260px" : ""}
       marginTop={15}
     >
       <Typography variant="h5">404 - Not Found</Typography>
