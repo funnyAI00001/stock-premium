@@ -36,6 +36,7 @@ router.post("/getCoveredcallPremium", async (req, res) => {
   const OTM5annualROIs = [];
   const OTM10ROIs = [];
   const OTM10annualROIs = [];
+  const available_symbols = [];
   // END //
 
   for (let index = 0; index < symbols.length; index++) {
@@ -63,7 +64,7 @@ router.post("/getCoveredcallPremium", async (req, res) => {
       res.status(500).json({ message: "service not available" });
     }
 
-    sharePrices.push(response.data.bid);
+    // sharePrices.push(response.data.bid);
 
     let daysToExpirationDate = 1;
     const startDate = new Date(expiry_date);
@@ -81,9 +82,12 @@ router.post("/getCoveredcallPremium", async (req, res) => {
       );
 
       if (respon.data.s === "no_data") {
-        res.status(400).json({ message: "Error in fetching options chain" });
-        return;
+        // res.status(400).json({ message: "Error in fetching options chain" });
+        // return;
+
+        continue;
       }
+
       const sharePrice = response.data.bid;
       const strike = respon.data.strike;
       const mid = respon.data.mid;
@@ -156,11 +160,15 @@ router.post("/getCoveredcallPremium", async (req, res) => {
       OTM5annualROIs.push(OTM5AnnualROI.toFixed(2));
       OTM10ROIs.push(OTM10ROI.toFixed(2));
       OTM10annualROIs.push(OTM10AnnualROI.toFixed(2));
+      sharePrices.push(response.data.bid);
+      available_symbols.push(symbol);
     } catch (err) {
-      console.log("Error in fetching options chain " + err.message);
-      res.status(400).json({ message: "Error in fetching options chain" });
-
-      return;
+      console.log("Error in fetching options chain: " + err.message);
+      if (err.response.status != 404) {
+        console.log(err.response.status);
+        res.status(500).json({ message: "Error in  fetching options chain" });
+        return;
+      }
     }
   }
 
@@ -179,6 +187,7 @@ router.post("/getCoveredcallPremium", async (req, res) => {
     OTM10ROIs,
     OTM10annualROIs,
     expiration_date: expiry_date,
+    available_symbols,
   });
 });
 
@@ -366,12 +375,14 @@ router.post("/getWeeklyExpiryDates", async (req, res) => {
   }
 
   // Filter out dates that are present for all symbols
-  const commonDatesArray = Object.keys(commonDates).filter(
-    (date) => commonDates[date] === symbols.length
-  );
+  // const commonDatesArray = Object.keys(commonDates).filter(
+  //   (date) => commonDates[date] === symbols.length
+  // );
+  const dates = Object.keys(commonDates);
 
   // Filter out dates which are within the next 45 days
-  const next45DaysDates = commonDatesArray.filter((date) => {
+  // const next45DaysDates = commonDatesArray.filter((date) => {
+  const next45DaysDates = dates.filter((date) => {
     const targetDate = new Date(date);
     const currentDate = new Date();
     const daysDifference = Math.ceil(

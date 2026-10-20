@@ -47,6 +47,7 @@ const DrawerAppBar = (props) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const isMd = useMediaQuery((theme) => theme.breakpoints.up("md"));
   const isLg = useMediaQuery((theme) => theme.breakpoints.up("lg"));
+  const isSm = useMediaQuery((theme) => theme.breakpoints.up("sm"));
   const dispatch = useDispatch();
   const subscriptionStatus = useSelector(
     (state) => state.stripe.subscriptionStatus
@@ -122,40 +123,18 @@ const DrawerAppBar = (props) => {
           >
             <a href="/shortlist" style={{ textDecoration: "none" }}>
               <b style={{ color: "#BFA76F", fontFamily: "Roboto, sans-serif" }}>
-                COVERD
+                {/* COVERD */}
               </b>
             </a>
           </Typography>
         </div>
       </Box>
       <Divider />
-      {/* <List
-        sx={{
-          display: {
-            sm: "none",
-          },
-        }}
-      >
-        <ListItem
-          disablePadding
-          sx={{ border: "solid 1px white", paddingX: 1, borderRadius: 1 }}
-        >
-          <InfoIcon />
-          <ListItemButton sx={{ textAlign: "center" }}>
-            <NavLink
-              to="https://coverd.io"
-              style={{ textDecoration: "none", color: "inherit" }}
-              target="_blank"
-            >
-              <ListItemText primary="What is COVERD?" />
-            </NavLink>
-          </ListItemButton>
-        </ListItem>
-      </List> */}
+
       <List>
         {[
           "Shortlist",
-          "Earn",
+          "Coverd Calls",
           "Options Screener",
           "Education",
           "Community",
@@ -174,9 +153,9 @@ const DrawerAppBar = (props) => {
                 ) : index === 1 ? (
                   <PaidIcon />
                 ) : index === 2 ? (
-                  <SchoolIcon />
-                ) : index === 3 ? (
                   <CameraIcon />
+                ) : index === 3 ? (
+                  <SchoolIcon />
                 ) : (
                   <ForumIcon />
                 )}
@@ -214,81 +193,67 @@ const DrawerAppBar = (props) => {
           height: 60,
         }}
       >
-        <Toolbar sx={{ justifyContent: "end" }}>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
-          >
-            <MenuIcon />
-          </IconButton>
-
-          <Typography
-            variant="h5"
-            color="red"
-            sx={{
-              position: "absolute",
-              left: "50%",
-              transform: "translateX(-50%)",
-            }}
-          >
-            {isOffline && (
-              <Box
-                display="flex"
-                alignItems="center"
-                sx={{ backgroundColor: "#444", padding: 1 }}
-              >
-                <WarningIcon sx={{ marginRight: 1 }} />
-                You are currently offline!
+        <Toolbar sx={{ justifyContent: isSm ? "end" : "space-between" }}>
+          <Box sx={{ display: { sm: "none" } }}>
+            <Link to="/shortlist">
+              <Box display="flex" alignItems="center">
+                <img src="/logo.png" alt="logo" style={imageStyle} />
               </Box>
-            )}
-          </Typography>
+            </Link>
+          </Box>
+          <div style={{ display: "flex", justifyContent: "end" }}>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { sm: "none" } }}
+            >
+              <MenuIcon />
+            </IconButton>
 
-          {/* <Button
-            color="primary"
-            variant="outlined"
-            sx={{
-              marginRight: 2,
-              borderColor: "white",
-              color: "white",
-              borderRadius: 0.5,
-              display: { xs: "none", sm: "inline-flex" },
-            }}
-          >
-            <InfoIcon sx={{ marginRight: 0.5 }} />
-            <Typography variant="h6" fontSize={17}>
-              <NavLink
-                to="https://coverd.io"
-                style={{ textDecoration: "none", color: "inherit" }}
-                target="_blank"
-              >
-                What is COVERD?
-              </NavLink>
+            <Typography
+              variant="h5"
+              color="red"
+              sx={{
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
+              {isOffline && (
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  sx={{ backgroundColor: "#444", padding: 1 }}
+                >
+                  <WarningIcon sx={{ marginRight: 1 }} />
+                  You are currently offline!
+                </Box>
+              )}
             </Typography>
-          </Button> */}
-          {/* </Box> */}
-          <Avatar
-            src={user && user.avatar}
-            sx={{ width: 35, height: 35, cursor: "pointer" }}
-            onClick={(event) => {
-              setAnchorEl(event.currentTarget);
-            }}
-          >
-            {user && getInitials(user.name)}
-          </Avatar>
-          <AccountPopover
-            open={popoverOpen}
-            onClose={() => {
-              setAnchorEl(null);
-            }}
-            anchorEl={anchorEl}
-            PaperProps={{ sx: { width: 200 } }}
-            closePopover={() => {
-              setAnchorEl(null);
-            }}
-          />
+
+            <Avatar
+              src={user && user.avatar}
+              sx={{ width: 35, height: 35, cursor: "pointer" }}
+              onClick={(event) => {
+                setAnchorEl(event.currentTarget);
+              }}
+            >
+              {user && getInitials(user.name)}
+            </Avatar>
+            <AccountPopover
+              open={popoverOpen}
+              onClose={() => {
+                setAnchorEl(null);
+              }}
+              anchorEl={anchorEl}
+              PaperProps={{ sx: { width: 200 } }}
+              closePopover={() => {
+                setAnchorEl(null);
+              }}
+            />
+          </div>
         </Toolbar>
       </AppBar>
       <Box

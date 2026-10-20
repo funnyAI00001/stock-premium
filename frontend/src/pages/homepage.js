@@ -46,7 +46,8 @@ const Homepage = () => {
         padding={isSmScreen ? 2 : 1}
       >
         <Typography variant={isSmScreen ? "h1" : "h2"} color="text.third">
-          COVERD.io
+          {/* COVERD.io */}
+          <img src="/logo.png" style={{ width: isSmScreen ? "5vw" : "15vw" }} alt="logo" />
         </Typography>
         <div style={{ gap: 10, display: "flex" }}>
           <Button

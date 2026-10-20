@@ -8,7 +8,6 @@ import TableRow from "@mui/material/TableRow";
 
 import { Box, Button, Divider } from "@mui/material";
 import { useTheme } from "@emotion/react";
-import { connect } from "react-redux";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { useNavigate } from "react-router-dom";
 
@@ -28,6 +27,7 @@ const CoveredCallReturnsTable = ({
   maxRisks,
   maxRORs,
   annualMaxRORs,
+  available_symbols,
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -102,7 +102,7 @@ const CoveredCallReturnsTable = ({
                   >
                     {rowNames[0]}
                   </TableCell>
-                  {symbols.map((item, index) => (
+                  {available_symbols.map((item, index) => (
                     <TableCell align="center" key={index}>
                       {item}
                     </TableCell>
@@ -416,8 +416,4 @@ const CoveredCallReturnsTable = ({
   );
 };
 
-const mapStateToProps = (state) => ({
-  sharePrices: state.stock.sharePrices,
-});
-
-export default connect(mapStateToProps)(CoveredCallReturnsTable);
+export default CoveredCallReturnsTable;

@@ -35,6 +35,7 @@ export const getCoveredCallPremium = (data, callback) => async (dispatch) => {
           OTM10ROIs,
           OTM10annualROIs,
           expiration_date,
+          available_symbols
         } = res.data;
 
         dispatch({
@@ -54,6 +55,7 @@ export const getCoveredCallPremium = (data, callback) => async (dispatch) => {
             OTM10ROIs,
             OTM10annualROIs,
             expiration_date,
+            available_symbols
           },
         });
 
@@ -311,7 +313,9 @@ export const getWeeklyExpiryDates = (data, callback) => async (dispatch) => {
       payload: { weeklyExpiryDates },
     });
   } catch (error) {
-    console.log(error);
+    console.log(error.message);
+
+    callback && callback();
   }
 };
 

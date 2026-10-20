@@ -102,6 +102,8 @@ const Calculate = ({
   const [openExpiryNotSelectedError, setOpenExpiryNotSelectedError] =
     useState(false);
   const [openMaxSymbolCounts, setOpenMaxSymbolCounts] = useState(false);
+  const [openWarningForNoSupportSymbol, setOpenWarningForNoSupportSymbol] =
+    useState(false);
 
   const service_error = useSelector((state) => state.stock.service_error);
   const server_error = useSelector((state) => state.stock.server_error);
@@ -115,6 +117,9 @@ const Calculate = ({
     (state) => state.stock.selectedSymbolsForCalculation
   );
   const expirations = useSelector((state) => state.stock.expirations);
+  const available_symbols = useSelector(
+    (state) => state.stock.available_symbols
+  );
   const weekly_expiry_dates = useSelector(
     (state) => state.stock.weekly_expiry_dates
   );
@@ -408,6 +413,7 @@ const Calculate = ({
   // This is called when the calculation is successful!
   const firstCalculateSuccess = () => {
     setFirstCalculate(false);
+    setOpenWarningForNoSupportSymbol(true);
   };
 
   // Add symbol
@@ -770,6 +776,8 @@ const Calculate = ({
             maxRisks={maxRisks}
             maxRORs={maxRORs}
             annualMaxRORs={annualMaxRORs}
+            available_symbols={available_symbols}
+            sharePrices={sharePrices}
             dataForPdf={{
               sharePrices,
               ATMs,
@@ -858,12 +866,21 @@ const Calculate = ({
         onClose={() => setOpenExpiryNotSelectedError(false)}
       />
 
-      {/* Expiry date not selected error */}
+      {/* Expiry date 'not selected' error */}
       <CustomAlert
         openState={openMaxSymbolCounts}
         severity="warning"
         text="You can select ten symbols at max!"
         onClose={() => setOpenMaxSymbolCounts(false)}
+      />
+
+      {/* A notification is displayed on top of the screen that says:  */}
+      <CustomAlert
+        openState={openWarningForNoSupportSymbol && weeklyOption}
+        severity="warning"
+        text="Symbols that do not support the selected weekly expiry date are not displayed."
+        autoHideDuration={10000}
+        onClose={() => setOpenWarningForNoSupportSymbol(false)}
       />
     </div>
   );

@@ -90,8 +90,8 @@ const BasicFilters = () => {
           betas: selectedBetas,
           minMarketCap: minMarketCap,
           maxMarketCap: maxMarketCap,
-          minSharePrice: minSharePrice,
-          maxSharePrice: maxSharePrice,
+          minSharePrice: minSharePrice !== "" ? minSharePrice : 0,
+          maxSharePrice: maxSharePrice !== "" ? maxSharePrice : 1e6,
         },
         onEndGetBasicResult
       )
@@ -222,11 +222,13 @@ const BasicFilters = () => {
                   setMinMarketCap(event.target.value);
                 }}
               >
+                <MenuItem value={"0B"}>Min</MenuItem>
                 <MenuItem value={"250M"}>$ 250M</MenuItem>
                 <MenuItem value={"500M"}>$ 500M</MenuItem>
                 <MenuItem value={"1B"}>$ 1B</MenuItem>
                 <MenuItem value={"10B"}>$ 10B</MenuItem>
                 <MenuItem value={"100B"}>$ 100B</MenuItem>
+                <MenuItem value={"500B"}>$ 500B</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -249,6 +251,7 @@ const BasicFilters = () => {
                   setMaxMarketCap(event.target.value);
                 }}
               >
+                <MenuItem value={"10T"}>Max</MenuItem>
                 <MenuItem value={"1T"}>$ 1T</MenuItem>
                 <MenuItem value={"500B"}>$ 500B</MenuItem>
                 <MenuItem value={"100B"}>$ 100B</MenuItem>
@@ -304,7 +307,8 @@ const BasicFilters = () => {
       <CustomAlert
         openState={openWarningForNoSector}
         severity="warning"
-        text="Please select a sector at least!"
+        text="Please select at least one sector!"
+        autoHideDuration={6000}
         onClose={() => {
           setOpenWarningForNoSector(false);
         }}
@@ -312,7 +316,8 @@ const BasicFilters = () => {
       <CustomAlert
         openState={openWarningForNoBeta}
         severity="warning"
-        text="Please select a Beta at least!"
+        text="Please select at least one beta!"
+        autoHideDuration={6000}
         onClose={() => {
           setOpenWarningForNoBeta(false);
         }}

@@ -41,6 +41,7 @@ const initialState = {
   weekly_expiry_dates: [],
   symbolLists: [],
   basicFilterResult: [],
+  available_symbols: [], // available symbols in the backend
 };
 
 const stockReducer = (state = initialState, action) => {
@@ -61,6 +62,7 @@ const stockReducer = (state = initialState, action) => {
         OTM10ROIs,
         OTM10annualROIs,
         expiration_date,
+        available_symbols,
       } = action.payload;
 
       return {
@@ -79,6 +81,7 @@ const stockReducer = (state = initialState, action) => {
         OTM10ROIs: OTM10ROIs,
         OTM10annualROIs: OTM10annualROIs,
         expiration_date: expiration_date,
+        available_symbols: available_symbols,
       };
 
     case SYMBOL_NOT_FOUND_ERROR:

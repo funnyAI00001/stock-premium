@@ -6,7 +6,7 @@ const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-const CustomAlert = ({ openState, text, severity, onClose }) => {
+const CustomAlert = ({ openState, text, severity, onClose, autoHideDuration = 5000 }) => {
   const [open, setOpen] = useState(openState);
 
   const handleClose = (event, reason) => {
@@ -25,7 +25,7 @@ const CustomAlert = ({ openState, text, severity, onClose }) => {
   return (
     <Snackbar
       open={open}
-      autoHideDuration={3000}
+      autoHideDuration={autoHideDuration}
       onClose={handleClose}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
     >
